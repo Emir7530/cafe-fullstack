@@ -1,12 +1,8 @@
-export type ProductSection = "menu" | "shop"
-
-
 export type Product = {
   id: number;
   name: string;
   price: number;
-  section: ProductSection;
-  category: string;
+  categoryId: number;
   description: string;
   imageUrl: string;
 };
