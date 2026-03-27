@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import productsRoutes from "./routes/productsRoutes";
+import categoriesRoutes from "./routes/categoriesRoutes"
 
 
 const app = express();
@@ -13,6 +14,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/products", productsRoutes);
+
+app.use("/api/categories", categoriesRoutes);
 
 app.listen(5000, () => {
   console.log("Server running on port 5000");
