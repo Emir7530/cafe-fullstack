@@ -1,0 +1,39 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+  importFileExtension = "ts"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CategorySection {
+  menu
+  shop
+}
+
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String
+  section  CategorySection
+  products Product[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, section])
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  price       Decimal @db.Decimal(10, 2)
+  description String?
+  imageUrl    String?
+  categoryId  Int
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

@@ -1,232 +1,330 @@
 import type { Request, Response } from "express";
-import type { Product } from "../models/product";
-import type { Category } from "../models/category";
-import { products, categories } from "../data/data";
+import { Prisma } from "../generated/prisma/client";
+import { prisma } from "../lib/prisma";
 
+const formatProduct = <T extends { price: Prisma.Decimal }>(product: T) => ({
+  ...product,
+  price: Number(product.price),
+});
 
-export const getProducts = (req: Request, res: Response) => {
-  const { section, category, search, minPrice, maxPrice, sort, page, limit } = req.query;
-  let result = [...products];
+export const getProducts = async (req: Request, res: Response) => {
+  try {
+    const { category, section, search, minPrice, maxPrice, sort, page, limit } =
+      req.query;
 
-  const categoryMap = new Map(categories.map((category) => [category.id, category]));
+    const where: Prisma.ProductWhereInput = {};
 
-  if (section) {
-    result = result.filter((product) => {
-      const foundCategory = categoryMap.get(product.categoryId);
-      return foundCategory?.section.toLowerCase() === String(section).toLowerCase();
-    });
-  }
+    if (category || section) {
+      where.category = {};
 
-  if (category) {
-    result = result.filter((product) => {
-      const foundCategory = categoryMap.get(product.categoryId);
-      return foundCategory?.name.toLowerCase() === String(category).toLowerCase();
-    });
-  }
+      if (category) {
+        where.category.name = {
+          equals: String(category),
+          mode: "insensitive",
+        };
+      }
 
-  if (search) {
-    const searchText = String(search).toLowerCase();
+      if (section) {
+        const sectionValue = String(section).toLowerCase();
 
-    result = result.filter((product) => {
-      const foundCategory = categoryMap.get(product.categoryId);
+        if (sectionValue !== "menu" && sectionValue !== "shop") {
+          return res.status(400).json({
+            message: "Section must be either 'menu' or 'shop'",
+          });
+        }
 
-      return (
-        product.name.toLowerCase().includes(searchText) ||
-        product.description.toLowerCase().includes(searchText) ||
-        foundCategory?.name.toLowerCase().includes(searchText) ||
-        foundCategory?.section.toLowerCase().includes(searchText)
-      );
-    });
-  }
-
-  if (minPrice) {
-    result = result.filter((product) => product.price >= Number(minPrice));
-  }
-
-  if (maxPrice) {
-    result = result.filter((product) => product.price <= Number(maxPrice));
-  }
-
-  if (sort === "asc") {
-    result.sort((a, b) => a.price - b.price);
-  }
-
-  if (sort === "desc") {
-    result.sort((a, b) => b.price - a.price);
-  }
-
-  const pageNumber = Math.max(1, Number(page) || 1);
-  const limitNumber = Math.max(1, Number(limit) || result.length || 1);
-
-  const startIndex = (pageNumber - 1) * limitNumber;
-  const endIndex = startIndex + limitNumber;
-
-  const paginatedProducts = result.slice(startIndex, endIndex);
-
-  const data = paginatedProducts.map((product) => ({
-    ...product,
-    category: categoryMap.get(product.categoryId) || null,
-  }));
-
-  res.json({
-    total: result.length,
-    page: pageNumber,
-    limit: limitNumber,
-    totalPages: Math.ceil(result.length / limitNumber),
-    data,
-  });
-};
-
-export const getProductById = (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-
-  if (isNaN(id)) {
-    return res.status(400).json({ message: "Invalid product id." });
-  }
-
-  const product = products.find((product) => product.id === id);
-
-  if (!product) {
-    return res.status(404).json({ message: "Product not found." });
-  }
-
-  const category = categories.find((category) => category.id === product.categoryId) || null;
-
-  res.json({
-    ...product,
-    category,
-  });
-};
-
-export const createProduct = (req: Request, res: Response) => {
-  const { name, price, categoryId, description, imageUrl } = req.body;
-
-  if (!name || price === undefined || categoryId === undefined || !description) {
-    return res.status(400).json({ message: "Missing fields." });
-  }
-
-  if (typeof name !== "string" || !name.trim()) {
-    return res.status(400).json({ message: "Name is required." });
-  }
-
-  if (typeof price !== "number" || price <= 0) {
-    return res.status(400).json({ message: "Price must be a positive number." });
-  }
-
-  if (typeof categoryId !== "number" || categoryId <= 0) {
-    return res.status(400).json({ message: "Category ID must be a positive number." });
-  }
-
-  if (typeof description !== "string" || !description.trim()) {
-    return res.status(400).json({ message: "Description is required." });
-  }
-
-  if (imageUrl !== undefined && typeof imageUrl !== "string") {
-    return res.status(400).json({ message: "Image URL must be a string." });
-  }
-
-  const categoryExists = categories.some((category) => category.id === categoryId);
-
-  if (!categoryExists) {
-    return res.status(400).json({ message: "Invalid categoryId." });
-  }
-
-  const newProduct: Product = {
-    id: products.length ? Math.max(...products.map((product) => product.id)) + 1 : 1,
-    name,
-    price,
-    categoryId,
-    description,
-    imageUrl: imageUrl || "",
-  };
-
-  products.push(newProduct);
-
-  const category = categories.find((category) => category.id === newProduct.categoryId) || null;
-
-  res.status(201).json({
-    ...newProduct,
-    category,
-  });
-};
-
-export const updateProduct = (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-
-  if (isNaN(id)) {
-    return res.status(400).json({ message: "Invalid product id." });
-  }
-
-  const { name, price, categoryId, description, imageUrl } = req.body;
-
-  const product = products.find((product) => product.id === id);
-
-  if (!product) {
-    return res.status(404).json({ message: "Product not found." });
-  }
-
-  if (name !== undefined && (typeof name !== "string" || !name.trim())) {
-    return res.status(400).json({ message: "Name must be a non-empty string." });
-  }
-
-  if (price !== undefined && (typeof price !== "number" || price <= 0)) {
-    return res.status(400).json({ message: "Price must be a positive number." });
-  }
-
-  if (
-    categoryId !== undefined &&
-    (typeof categoryId !== "number" || categoryId <= 0)
-  ) {
-    return res.status(400).json({ message: "Category ID must be a positive number." });
-  }
-
-  if (description !== undefined && (typeof description !== "string" || !description.trim())) {
-    return res.status(400).json({ message: "Description must be a non-empty string." });
-  }
-
-  if (imageUrl !== undefined && typeof imageUrl !== "string") {
-    return res.status(400).json({ message: "Image URL must be a string." });
-  }
-
-  if (categoryId !== undefined) {
-    const categoryExists = categories.some((category) => category.id === categoryId);
-
-    if (!categoryExists) {
-      return res.status(400).json({ message: "Invalid categoryId." });
+        where.category.section = sectionValue as "menu" | "shop";
+      }
     }
+
+    if (search) {
+      where.name = {
+        contains: String(search),
+        mode: "insensitive",
+      };
+    }
+
+    if (minPrice || maxPrice) {
+      where.price = {};
+
+      if (minPrice !== undefined) {
+        if (isNaN(Number(minPrice))) {
+          return res.status(400).json({
+            message: "minPrice must be a valid number",
+          });
+        }
+
+        where.price.gte = new Prisma.Decimal(String(minPrice));
+      }
+
+      if (maxPrice !== undefined) {
+        if (isNaN(Number(maxPrice))) {
+          return res.status(400).json({
+            message: "maxPrice must be a valid number",
+          });
+        }
+
+        where.price.lte = new Prisma.Decimal(String(maxPrice));
+      }
+    }
+
+    let orderBy: Prisma.ProductOrderByWithRelationInput = { id: "asc" };
+
+    if (sort !== undefined) {
+      if (sort !== "asc" && sort !== "desc") {
+        return res.status(400).json({
+          message: "sort must be either 'asc' or 'desc'",
+        });
+      }
+
+      orderBy = { price: sort };
+    }
+
+    const pageNumber = page !== undefined ? Number(page) : 1;
+    const limitNumber = limit !== undefined ? Number(limit) : 10;
+
+    if (isNaN(pageNumber) || pageNumber < 1) {
+      return res.status(400).json({
+        message: "page must be a positive number",
+      });
+    }
+
+    if (isNaN(limitNumber) || limitNumber < 1) {
+      return res.status(400).json({
+        message: "limit must be a positive number",
+      });
+    }
+
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        include: {
+          category: true,
+        },
+        orderBy,
+        skip,
+        take: limitNumber,
+      }),
+      prisma.product.count({ where }),
+    ]);
+
+    res.status(200).json({
+      total,
+      page: pageNumber,
+      limit: limitNumber,
+      totalPages: Math.ceil(total / limitNumber),
+      products: products.map(formatProduct),
+    });
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({
+      message: "Failed to fetch products",
+    });
   }
-
-  if (name !== undefined) product.name = name;
-  if (price !== undefined) product.price = price;
-  if (categoryId !== undefined) product.categoryId = categoryId;
-  if (description !== undefined) product.description = description;
-  if (imageUrl !== undefined) product.imageUrl = imageUrl;
-
-  const category = categories.find((category) => category.id === product.categoryId) || null;
-
-  res.json({
-    ...product,
-    category,
-  });
 };
 
-export const deleteProduct = (req: Request, res: Response) => {
-  const id = Number(req.params.id);
+export const getProductById = async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
 
-  if (isNaN(id)) {
-    return res.status(400).json({ message: "Invalid product id." });
+    if (isNaN(id)) {
+      return res.status(400).json({
+        message: "Invalid product id",
+      });
+    }
+
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: {
+        category: true,
+      },
+    });
+
+    if (!product) {
+      return res.status(404).json({
+        message: "Product not found",
+      });
+    }
+
+    res.status(200).json(formatProduct(product));
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    res.status(500).json({
+      message: "Failed to fetch product",
+    });
   }
+};
 
-  const productIndex = products.findIndex((product) => product.id === id);
+export const createProduct = async (req: Request, res: Response) => {
+  try {
+    const { name, price, description, imageUrl, categoryId } = req.body;
 
-  if (productIndex === -1) {
-    return res.status(404).json({ message: "Product not found." });
+    if (!name || price === undefined || categoryId === undefined) {
+      return res.status(400).json({
+        message: "name, price, and categoryId are required",
+      });
+    }
+
+    if (isNaN(Number(price))) {
+      return res.status(400).json({
+        message: "price must be a valid number",
+      });
+    }
+
+    if (isNaN(Number(categoryId))) {
+      return res.status(400).json({
+        message: "categoryId must be a valid number",
+      });
+    }
+
+    const category = await prisma.category.findUnique({
+      where: { id: Number(categoryId) },
+    });
+
+    if (!category) {
+      return res.status(404).json({
+        message: "Category not found",
+      });
+    }
+
+    const product = await prisma.product.create({
+      data: {
+        name: String(name),
+        price: new Prisma.Decimal(String(price)),
+        description: description ? String(description) : null,
+        imageUrl: imageUrl ? String(imageUrl) : null,
+        categoryId: Number(categoryId),
+      },
+      include: {
+        category: true,
+      },
+    });
+
+    res.status(201).json({
+      message: "Product created successfully",
+      product: formatProduct(product),
+    });
+  } catch (error) {
+    console.error("Error creating product:", error);
+    res.status(500).json({
+      message: "Failed to create product",
+    });
   }
+};
 
-  const deletedProduct = products.splice(productIndex, 1);
+export const updateProduct = async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
 
-  res.json({
-    message: "Product deleted successfully",
-    product: deletedProduct[0],
-  });
+    if (isNaN(id)) {
+      return res.status(400).json({
+        message: "Invalid product id",
+      });
+    }
+
+    const { name, price, description, imageUrl, categoryId } = req.body;
+
+    const existingProduct = await prisma.product.findUnique({
+      where: { id },
+    });
+
+    if (!existingProduct) {
+      return res.status(404).json({
+        message: "Product not found",
+      });
+    }
+
+    if (price !== undefined && isNaN(Number(price))) {
+      return res.status(400).json({
+        message: "price must be a valid number",
+      });
+    }
+
+    if (categoryId !== undefined) {
+      if (isNaN(Number(categoryId))) {
+        return res.status(400).json({
+          message: "categoryId must be a valid number",
+        });
+      }
+
+      const category = await prisma.category.findUnique({
+        where: { id: Number(categoryId) },
+      });
+
+      if (!category) {
+        return res.status(404).json({
+          message: "Category not found",
+        });
+      }
+    }
+
+    const updatedProduct = await prisma.product.update({
+      where: { id },
+      data: {
+        ...(name !== undefined && { name: String(name) }),
+        ...(price !== undefined && {
+          price: new Prisma.Decimal(String(price)),
+        }),
+        ...(description !== undefined && {
+          description: description ? String(description) : null,
+        }),
+        ...(imageUrl !== undefined && {
+          imageUrl: imageUrl ? String(imageUrl) : null,
+        }),
+        ...(categoryId !== undefined && {
+          categoryId: Number(categoryId),
+        }),
+      },
+      include: {
+        category: true,
+      },
+    });
+
+    res.status(200).json({
+      message: "Product updated successfully",
+      product: formatProduct(updatedProduct),
+    });
+  } catch (error) {
+    console.error("Error updating product:", error);
+    res.status(500).json({
+      message: "Failed to update product",
+    });
+  }
+};
+
+export const deleteProduct = async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+
+    if (isNaN(id)) {
+      return res.status(400).json({
+        message: "Invalid product id",
+      });
+    }
+
+    const existingProduct = await prisma.product.findUnique({
+      where: { id },
+    });
+
+    if (!existingProduct) {
+      return res.status(404).json({
+        message: "Product not found",
+      });
+    }
+
+    await prisma.product.delete({
+      where: { id },
+    });
+
+    res.status(200).json({
+      message: "Product deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    res.status(500).json({
+      message: "Failed to delete product",
+    });
+  }
 };

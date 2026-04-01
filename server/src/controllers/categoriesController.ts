@@ -1,77 +1,132 @@
 import type { Request, Response } from "express";
-import type { Product } from "../models/product";
-import type { Category } from "../models/category"
-import { products, categories } from "../data/data";
+import { prisma } from "../lib/prisma";
 
-export const getCategories = (req: Request, res: Response) => {
-  const { name, section } = req.query;
-  let result = [...categories];
+export const getCategories = async (req: Request, res: Response) => {
+  try {
+    const { name, section } = req.query;
+    const where: {
+      name?: { equals: string; mode: "insensitive" };
+      section?: "menu" | "shop";
+    } = {};
 
-  if (name) {
-    result = result.filter((category) =>
-      category.name.toLowerCase() === String(name).toLowerCase()
-    );
-  }
+    if (name) {
+      where.name = {
+        equals: String(name),
+        mode: "insensitive",
+      };
+    }
 
-  if (section) {
-    result = result.filter((category) =>
-      category.section.toLowerCase() === String(section).toLowerCase()
-    );
-  }
+    if (section) {
+      const sectionValue = String(section).toLowerCase();
 
-  res.json(result);
-};  
+      if (sectionValue !== "menu" && sectionValue !== "shop") {
+        return res.status(400).json({
+          message: "Section must be either 'menu' or 'shop'",
+        });
+      }
 
-export const createCategory = (req: Request, res: Response) => {
-  const { name, section } = req.body;
+      where.section = sectionValue;
+    }
 
-  if (!name || !section) {
-    return res.status(400).json({ message: "Missing fields." });
-  }
+    const categories = await prisma.category.findMany({
+      where,
+      orderBy: {
+        id: "asc",
+      },
+    });
 
-  if (section !== "menu" && section !== "shop") {
-    return res.status(400).json({ message: "Invalid section." });
-  }
-
-  const newCategory: Category = {
-    id: categories.length
-      ? Math.max(...categories.map((c) => c.id)) + 1
-      : 1,
-    name,
-    section,
-  };
-
-  categories.push(newCategory);
-
-  res.status(201).json(newCategory);
-};
-
-export const deleteCategory = (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-
-  if (isNaN(id)) {
-    return res.status(400).json({ message: "Invalid category id." });
-  }
-
-  const index = categories.findIndex((c) => c.id === id);
-
-  if (index === -1) {
-    return res.status(404).json({ message: "Category not found." });
-  }
-
-  // 🔥 IMPORTANT: prevent deleting category used by products
-  const isUsed = products.some((p) => p.categoryId === id);
-
-  if (isUsed) {
-    return res.status(400).json({
-      message: "Cannot delete category that is used by products.",
+    res.status(200).json(categories);
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    res.status(500).json({
+      message: "Failed to fetch categories",
     });
   }
+};
 
-  const deletedCategory = categories.splice(index, 1);
+export const createCategory = async (req: Request, res: Response) => {
+  try {
+    const { name, section } = req.body;
 
-  res.json({
-    message: "Category deleted successfully",
-    category: deletedCategory[0],
-  });
+    if (!name || !section) {
+      return res.status(400).json({
+        message: "name and section are required",
+      });
+    }
+
+    const sectionValue = String(section).toLowerCase();
+
+    if (sectionValue !== "menu" && sectionValue !== "shop") {
+      return res.status(400).json({
+        message: "Section must be either 'menu' or 'shop'",
+      });
+    }
+
+    const category = await prisma.category.create({
+      data: {
+        name: String(name),
+        section: sectionValue,
+      },
+    });
+
+    res.status(201).json(category);
+  } catch (error) {
+    console.error("Error creating category:", error);
+    res.status(500).json({
+      message: "Failed to create category",
+    });
+  }
+};
+
+export const deleteCategory = async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+
+    if (isNaN(id)) {
+      return res.status(400).json({
+        message: "Invalid category id",
+      });
+    }
+
+    const category = await prisma.category.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: {
+            products: true,
+          },
+        },
+      },
+    });
+
+    if (!category) {
+      return res.status(404).json({
+        message: "Category not found",
+      });
+    }
+
+    if (category._count.products > 0) {
+      return res.status(400).json({
+        message: "Cannot delete category that is used by products.",
+      });
+    }
+
+    await prisma.category.delete({
+      where: { id },
+    });
+
+    res.status(200).json({
+      message: "Category deleted successfully",
+      category: {
+        id: category.id,
+        name: category.name,
+        section: category.section,
+      },
+    });
+  } catch (error) {
+    console.error("Error deleting category:", error);
+    res.status(500).json({
+      message: "Failed to delete category",
+    });
+  }
 };
