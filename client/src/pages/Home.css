@@ -1,43 +1,56 @@
 .home-page {
+  width: 100%;
+  min-height: 100vh;
   background-color: #fffaf3;
-  min-height: calc(100vh - 72px);
 }
 
-.hero-section {
-  min-height: calc(100vh - 72px);
-  padding: 80px 64px;
+.hero-slider {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 72px);
+  min-height: 620px;
+  overflow: hidden;
 
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 64px;
+  background:
+    linear-gradient(
+      90deg,
+      #f7ecdc 0%,
+      #fffaf3 28%,
+      #fffaf3 62%,
+      #d9bd95 100%
+    );
 }
+.hero-slider-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  display: block;
 
-.hero-content {
-  max-width: 620px;
+  transition: opacity 0.3s ease;
 }
 
 .hero-label {
-  color: #8a4d2a;
+  color: #9b6a45;
+  font-size: 15px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  font-size: 14px;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .hero-content h1 {
-  font-size: 64px;
-  line-height: 1.05;
-  color: #3b1f12;
+  font-size: 72px;
+  line-height: 1.02;
   margin: 0 0 24px;
+  color: #3b1f12;
 }
 
-.hero-description {
+.hero-content p {
   font-size: 20px;
   line-height: 1.6;
   color: #6b4a3a;
-  margin-bottom: 36px;
+  margin-bottom: 34px;
 }
 
 .hero-buttons {
@@ -45,68 +58,80 @@
   gap: 16px;
 }
 
-.primary-btn,
-.secondary-btn {
+.hero-primary-btn,
+.hero-secondary-btn {
   padding: 15px 26px;
   border-radius: 10px;
-
-  text-decoration: none;
-  text-transform: uppercase;
 
   font-size: 14px;
   font-weight: 800;
   letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-decoration: none;
 }
 
-.primary-btn {
+.hero-primary-btn {
   background-color: #3b1f12;
   color: white;
   border: 2px solid #3b1f12;
 }
 
-.primary-btn:hover {
-  background-color: #5a321f;
-}
-
-.secondary-btn {
+.hero-secondary-btn {
+  background-color: rgba(255, 250, 243, 0.8);
   color: #3b1f12;
   border: 2px solid #d7ccc0;
-  background-color: transparent;
 }
 
-.secondary-btn:hover {
-  background-color: #f3eadf;
+.slider-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+
+  background-color: rgba(255, 250, 243, 0.8);
+  color: #3b1f12;
+
+  font-size: 38px;
+  line-height: 1;
+  cursor: pointer;
 }
 
-.hero-image-card {
-  width: 430px;
-  min-height: 430px;
-  border-radius: 32px;
+.slider-btn:hover {
+  background-color: #fffaf3;
+}
 
-  background: linear-gradient(145deg, #f4e3cf, #fff7ec);
-  box-shadow: 0 24px 60px rgba(59, 31, 18, 0.15);
+.slider-btn-left {
+  left: 24px;
+}
+
+.slider-btn-right {
+  right: 24px;
+}
+
+.slider-dots {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
 
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-
-  padding: 40px;
+  gap: 10px;
 }
 
-.coffee-cup {
-  font-size: 110px;
-  margin-bottom: 24px;
+.slider-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+
+  border: 2px solid white;
+  background-color: transparent;
+  cursor: pointer;
 }
 
-.hero-image-card h2 {
-  color: #3b1f12;
-  font-size: 28px;
-  margin-bottom: 12px;
-}
-
-.hero-image-card p {
-  color: #6b4a3a;
-  font-size: 18px;
+.slider-dot.active {
+  background-color: white;
 }
