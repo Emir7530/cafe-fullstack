@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
+import RegisterPage from "./pages/RegisterPage";
+import LoginPage from "./pages/LoginPage";
 
 function Menu() {
   return <h1>Menu</h1>;
@@ -14,14 +16,6 @@ function About() {
   return <h1>About</h1>;
 }
 
-
-function Login() {
-  return <h1>Login</h1>;
-}
-
-function Register() {
-  return <h1>Register</h1>;
-}
 
 function Cart() {
   return <h1>Cart</h1>;
@@ -39,8 +33,8 @@ function App() {
           <Route path="/menu" element={<Menu />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/about" element={<About />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/cart" element={<Cart />} />
         </Routes>
       </main>

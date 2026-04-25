@@ -33,7 +33,7 @@ function Home() {
         />
 
        
-
+    
 
         <button
           className="slider-btn slider-btn-left"
