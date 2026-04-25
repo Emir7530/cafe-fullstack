@@ -24,10 +24,9 @@ function Cart() {
 
 function App() {
   return (
-    <BrowserRouter>
+    <>
       <Navbar />
 
-      <main>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/menu" element={<Menu />} />
@@ -37,8 +36,8 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/cart" element={<Cart />} />
         </Routes>
-      </main>
-    </BrowserRouter>
+      
+    </>
   );
 }
 

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { registerUser } from "../api/authApi";
 import "./Auth.css";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function RegisterPage() {
   const [name, setName] = useState("");
@@ -10,6 +12,8 @@ function RegisterPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -25,8 +29,8 @@ function RegisterPage() {
         password,
       });
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      login(data.user, data.token);
+      navigate("/");
 
       setSuccess("Account created successfully.");
       setName("");
