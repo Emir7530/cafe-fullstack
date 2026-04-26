@@ -1,0 +1,239 @@
+.about-page {
+  min-height: 100vh;
+  background-color: #fffaf3;
+  padding-bottom: 72px;
+}
+
+.about-hero {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 72px 24px 48px;
+  display: grid;
+  grid-template-columns: 1fr 460px;
+  gap: 48px;
+  align-items: center;
+}
+
+.about-label,
+.about-section-label {
+  color: #9b6a45;
+  font-size: 14px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 14px;
+}
+
+.about-hero-content h1 {
+  font-size: 64px;
+  line-height: 1.04;
+  color: #2f2118;
+  margin: 0 0 22px;
+}
+
+.about-hero-content p {
+  color: #766657;
+  font-size: 18px;
+  line-height: 1.75;
+  max-width: 620px;
+  margin: 0;
+}
+
+.about-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 30px;
+}
+
+.about-primary-button,
+.about-secondary-button {
+  display: inline-block;
+  padding: 13px 24px;
+  border-radius: 999px;
+  font-weight: 900;
+  text-decoration: none;
+  transition: 0.2s ease;
+}
+
+.about-primary-button {
+  background-color: #9b6a45;
+  color: white;
+}
+
+.about-primary-button:hover {
+  background-color: #7f5233;
+  transform: translateY(-1px);
+}
+
+.about-secondary-button {
+  background-color: #fff3e4;
+  color: #7f5233;
+}
+
+.about-secondary-button:hover {
+  background-color: #f2ddc5;
+  transform: translateY(-1px);
+}
+
+.about-hero-image {
+  width: 100%;
+  aspect-ratio: 1 / 1.08;
+  border-radius: 32px;
+  overflow: hidden;
+  background-color: #ead8c5;
+  box-shadow: 0 24px 70px rgba(47, 33, 24, 0.16);
+}
+
+.about-hero-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* If image does not exist yet, this still keeps layout clean */
+.about-hero-image img[src=""] {
+  display: none;
+}
+
+.about-story-section,
+.about-values-section,
+.about-visit-section {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.about-story-card {
+  background-color: white;
+  border-radius: 28px;
+  padding: 42px;
+  box-shadow: 0 18px 45px rgba(47, 33, 24, 0.1);
+}
+
+.about-story-card h2,
+.about-visit-section h2 {
+  color: #2f2118;
+  font-size: 38px;
+  line-height: 1.15;
+  margin: 0 0 18px;
+}
+
+.about-story-card p,
+.about-visit-section p {
+  color: #766657;
+  font-size: 17px;
+  line-height: 1.7;
+  max-width: 760px;
+}
+
+.about-values-section {
+  margin-top: 28px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+.about-value-card {
+  background-color: white;
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 16px 40px rgba(47, 33, 24, 0.08);
+}
+
+.about-value-card span {
+  color: #9b6a45;
+  font-weight: 900;
+  font-size: 14px;
+}
+
+.about-value-card h3 {
+  color: #2f2118;
+  font-size: 24px;
+  margin: 14px 0 10px;
+}
+
+.about-value-card p {
+  color: #766657;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.about-visit-section {
+  margin-top: 28px;
+  background-color: #2f2118;
+  border-radius: 30px;
+  padding: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.about-visit-section .about-section-label {
+  color: #f2ddc5;
+}
+
+.about-visit-section h2 {
+  color: white;
+}
+
+.about-visit-section p {
+  color: #e5d3c0;
+  margin-bottom: 0;
+}
+
+.about-visit-section .about-primary-button {
+  background-color: #fff;
+  color: #2f2118;
+  white-space: nowrap;
+}
+
+.about-visit-section .about-primary-button:hover {
+  background-color: #f2ddc5;
+}
+
+@media (max-width: 900px) {
+  .about-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .about-hero-content h1 {
+    font-size: 48px;
+  }
+
+  .about-hero-image {
+    max-width: 520px;
+  }
+
+  .about-values-section {
+    grid-template-columns: 1fr;
+  }
+
+  .about-visit-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .about-hero {
+    padding-top: 48px;
+  }
+
+  .about-hero-content h1 {
+    font-size: 38px;
+  }
+
+  .about-story-card,
+  .about-visit-section {
+    padding: 28px;
+  }
+
+  .about-story-card h2,
+  .about-visit-section h2 {
+    font-size: 30px;
+  }
+}

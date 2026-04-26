@@ -9,10 +9,8 @@ import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import MyOrdersPage from "./pages/MyOrdersPage";
 import AdminOrdersPage from "./pages/AdminOrdersPage";
+import AboutPage from "./pages/AboutPage";
 
-function About() {
-  return <h1>About</h1>;
-}
 
 
 
@@ -25,7 +23,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/menu" element={<MenuPage />} />
           <Route path="/shop" element={<ShopPage />} />
-          <Route path="/about" element={<About />} />
+          <Route path="/about" element={<AboutPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/cart" element={<CartPage />} />
