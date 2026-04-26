@@ -5,6 +5,7 @@ import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import MenuPage from "./pages/MenuPage";
 import ShopPage from "./pages/ShopPage";
+import CartPage from "./pages/CartPage";
 
 function About() {
   return <h1>About</h1>;
@@ -28,7 +29,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/cart" element={<Cart />} />
+          <Route path="/cart" element={<CartPage />} />
         </Routes>
       
     </>
