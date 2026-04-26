@@ -159,7 +159,10 @@ export const getProductById = async (req: Request, res: Response) => {
 
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const { name, price, description, imageUrl, categoryId } = req.body;
+    const { name, price, description, categoryId } = req.body;
+
+    const file = req.file;
+    const imageUrl = file ? `/uploads/${file.filename}` : null;
 
     if (!name || price === undefined || categoryId === undefined) {
       return res.status(400).json({
@@ -170,6 +173,12 @@ export const createProduct = async (req: Request, res: Response) => {
     if (isNaN(Number(price))) {
       return res.status(400).json({
         message: "price must be a valid number",
+      });
+    }
+
+    if (Number(price) <= 0) {
+      return res.status(400).json({
+        message: "price must be greater than 0",
       });
     }
 
@@ -191,10 +200,10 @@ export const createProduct = async (req: Request, res: Response) => {
 
     const product = await prisma.product.create({
       data: {
-        name: String(name),
+        name: String(name).trim(),
         price: new Prisma.Decimal(String(price)),
-        description: description ? String(description) : null,
-        imageUrl: imageUrl ? String(imageUrl) : null,
+        description: description ? String(description).trim() : null,
+        imageUrl,
         categoryId: Number(categoryId),
       },
       include: {
@@ -224,7 +233,9 @@ export const updateProduct = async (req: Request, res: Response) => {
       });
     }
 
-    const { name, price, description, imageUrl, categoryId } = req.body;
+    const { name, price, description, categoryId } = req.body;
+
+    const file = req.file;
 
     const existingProduct = await prisma.product.findUnique({
       where: { id },
@@ -239,6 +250,12 @@ export const updateProduct = async (req: Request, res: Response) => {
     if (price !== undefined && isNaN(Number(price))) {
       return res.status(400).json({
         message: "price must be a valid number",
+      });
+    }
+
+    if (price !== undefined && Number(price) <= 0) {
+      return res.status(400).json({
+        message: "price must be greater than 0",
       });
     }
 
@@ -263,15 +280,15 @@ export const updateProduct = async (req: Request, res: Response) => {
     const updatedProduct = await prisma.product.update({
       where: { id },
       data: {
-        ...(name !== undefined && { name: String(name) }),
+        ...(name !== undefined && { name: String(name).trim() }),
         ...(price !== undefined && {
           price: new Prisma.Decimal(String(price)),
         }),
         ...(description !== undefined && {
-          description: description ? String(description) : null,
+          description: description ? String(description).trim() : null,
         }),
-        ...(imageUrl !== undefined && {
-          imageUrl: imageUrl ? String(imageUrl) : null,
+        ...(file && {
+          imageUrl: `/uploads/${file.filename}`,
         }),
         ...(categoryId !== undefined && {
           categoryId: Number(categoryId),
