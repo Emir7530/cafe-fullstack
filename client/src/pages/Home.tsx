@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import "./Home.css";
+import "../styles/Home.css";
 
 const heroImages = [
   "/images/eunoia-hero-1.png",

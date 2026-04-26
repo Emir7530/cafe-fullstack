@@ -8,15 +8,12 @@ import ShopPage from "./pages/ShopPage";
 import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import MyOrdersPage from "./pages/MyOrdersPage";
+import AdminOrdersPage from "./pages/AdminOrdersPage";
 
 function About() {
   return <h1>About</h1>;
 }
 
-
-function Cart() {
-  return <h1>Cart</h1>;
-}
 
 
 function App() {
@@ -34,6 +31,7 @@ function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/my-orders" element={<MyOrdersPage />} />
+          <Route path="/admin/orders" element={<AdminOrdersPage />} />
         </Routes>
       
     </>

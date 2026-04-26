@@ -50,7 +50,13 @@ function Navbar() {
             </button>
 
             <div className="user-dropdown">
-              <Link to="/my-orders">My Orders</Link>
+              {user?.role === "customer" && (
+                <Link to="/my-orders">My Orders</Link>
+              )}
+          
+              {user?.role === "admin" && (
+                <Link to="/admin/orders">Admin Orders</Link>
+              )}
               <Link to="/profile">Profile</Link>
 
               {user?.role === "admin" && (

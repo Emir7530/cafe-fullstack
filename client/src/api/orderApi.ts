@@ -87,3 +87,41 @@ export const getMyOrders = async (): Promise<Order[]> => {
 
   return result;
 };
+
+export const getAllOrders = async (): Promise<Order[]> => {
+  const response = await fetch(`${API_URL}/orders`, {
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  const result = await parseResponse(response);
+
+  if (!response.ok) {
+    throw new Error(result.message || "Failed to fetch all orders");
+  }
+
+  return result;
+};
+
+export const updateOrderStatus = async (
+  orderId: number,
+  status: OrderStatus
+) => {
+  const response = await fetch(`${API_URL}/orders/${orderId}/status`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify({ status }),
+  });
+
+  const result = await parseResponse(response);
+
+  if (!response.ok) {
+    throw new Error(result.message || "Failed to update order status");
+  }
+
+  return result;
+};

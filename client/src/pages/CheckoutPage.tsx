@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { createOrder } from "../api/orderApi";
-import "./CheckoutPage.css";
+import "../styles/CheckoutPage.css";
 
 const API_BASE_URL = "http://localhost:5000";
 
@@ -68,7 +68,7 @@ function CheckoutPage() {
 
             clearCart();
 
-            navigate(`/order-success/${result.order.id}`);
+            navigate("/my-orders");
         } catch (err) {
             if (err instanceof Error) {
                 setError(err.message);

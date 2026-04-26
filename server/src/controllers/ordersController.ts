@@ -202,3 +202,68 @@ export const getAllOrders = async (_req: AuthRequest, res: Response) => {
         });
     }
 };
+
+export const updateOrderStatus = async (req: AuthRequest, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    const { status } = req.body;
+
+    if (isNaN(id)) {
+      return res.status(400).json({
+        message: "Invalid order id.",
+      });
+    }
+
+    const allowedStatuses = ["pending", "preparing", "completed", "cancelled"];
+
+    if (!status || !allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        message: "Status must be pending, preparing, completed, or cancelled.",
+      });
+    }
+
+    const existingOrder = await prisma.order.findUnique({
+      where: { id },
+    });
+
+    if (!existingOrder) {
+      return res.status(404).json({
+        message: "Order not found.",
+      });
+    }
+
+    const updatedOrder = await prisma.order.update({
+      where: { id },
+      data: {
+        status,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        items: true,
+      },
+    });
+
+    res.status(200).json({
+      message: "Order status updated successfully.",
+      order: {
+        ...updatedOrder,
+        total: Number(updatedOrder.total),
+        items: updatedOrder.items.map((item) => ({
+          ...item,
+          price: Number(item.price),
+        })),
+      },
+    });
+  } catch (error) {
+    console.error("Error updating order status:", error);
+    res.status(500).json({
+      message: "Failed to update order status.",
+    });
+  }
+};

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
-import "./CartPage.css";
+import "../styles/CartPage.css";
 
 const API_BASE_URL = "http://localhost:5000";
 
@@ -122,7 +122,7 @@ function CartPage() {
 
                             <Link to="/checkout" className="checkout-button">
                                 Proceed to Checkout
-                            </Link>
+                            </Link> 
 
                             <button className="clear-cart-button" onClick={clearCart}>
                                 Clear Cart
