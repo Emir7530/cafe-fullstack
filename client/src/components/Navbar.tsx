@@ -31,8 +31,7 @@ function Navbar() {
         <Link to="/menu">Menu</Link>
         <Link to="/shop">Shop</Link>
         <Link to="/about">About</Link>
-        <Link to="/locations">Locations</Link>
-        <Link to="/contact">Contact</Link>
+        <Link to="/location">Locations</Link>
       </nav>
 
       <div className="navbar-actions">

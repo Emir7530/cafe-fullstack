@@ -10,7 +10,7 @@ import CheckoutPage from "./pages/CheckoutPage";
 import MyOrdersPage from "./pages/MyOrdersPage";
 import AdminOrdersPage from "./pages/AdminOrdersPage";
 import AboutPage from "./pages/AboutPage";
-
+import LocationPage from "./pages/LocationPage";
 
 
 
@@ -30,6 +30,7 @@ function App() {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/my-orders" element={<MyOrdersPage />} />
           <Route path="/admin/orders" element={<AdminOrdersPage />} />
+          <Route path="/location" element={<LocationPage />} />
         </Routes>
       
     </>
