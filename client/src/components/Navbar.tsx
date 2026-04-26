@@ -26,12 +26,12 @@ function Navbar() {
         </div>
       </Link>
 
-      <nav className="navbar-center">
+      <nav className="navbar-links">
         <Link to="/">Home</Link>
         <Link to="/menu">Menu</Link>
         <Link to="/shop">Shop</Link>
-        <Link to="/about">About</Link>
-        <Link to="/location">Locations</Link>
+        <Link to="/about" className="nav-about-link">About</Link>
+        <Link to="/location" className="nav-location-link">Locations</Link>
       </nav>
 
       <div className="navbar-actions">
@@ -45,7 +45,7 @@ function Navbar() {
         ) : (
           <div className="user-menu">
             <button className="user-menu-button">
-              {user?.name} <span>⌄</span>
+              {user?.name?.split(" ")[0]} <span>⌄</span>
             </button>
 
             <div className="user-dropdown">

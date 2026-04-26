@@ -53,13 +53,95 @@
   font-weight: 800;
 }
 
-.navbar-center {
+.navbar-logo,
+.logo-icon,
+.logo-icon span,
+.logo-text {
+  transition: 0.2s ease;
+}
+
+.navbar-logo {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Medium screens: make logo slightly smaller */
+@media (max-width: 980px) {
+  .navbar-logo {
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .logo-icon span {
+    width: 10px;
+    height: 25px;
+  }
+
+  .logo-text {
+    font-size: 17px;
+  }
+}
+
+/* Hide Location first */
+@media (max-width: 860px) {
+  .nav-location-link {
+    display: none;
+  }
+}
+
+/* Hide About second */
+@media (max-width: 760px) {
+  .nav-about-link {
+    display: none;
+  }
+
+  .logo-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .logo-icon span {
+    width: 9px;
+    height: 22px;
+  }
+
+  .logo-text {
+    font-size: 15px;
+  }
+}
+
+/* Very small screens: only show logo symbol */
+@media (max-width: 620px) {
+  .navbar-logo {
+    gap: 0;
+  }
+
+  .logo-text {
+    display: none;
+  }
+
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .logo-icon span {
+    width: 8px;
+    height: 20px;
+  }
+}
+
+.navbar-links {
   display: flex;
   align-items: center;
   gap: 32px;
 }
 
-.navbar-center a {
+.navbar-links a {
   text-decoration: none;
   color: #3b1f12;
 
@@ -69,7 +151,7 @@
   letter-spacing: 0.4px;
 }
 
-.navbar-center a:hover {
+.navbar-links a:hover {
   color: #8a4d2a;
 }
 
@@ -200,4 +282,53 @@
 
 .user-dropdown button {
   color: #b3261e;
+}
+
+@media (max-width: 980px) {
+  .navbar-logo {
+    font-size: 24px;
+  }
+
+  .navbar-links {
+    gap: 16px;
+  }
+}
+
+/* First hide Location */
+@media (max-width: 860px) {
+  .nav-location-link {
+    display: none;
+  }
+
+  .navbar-logo {
+    font-size: 22px;
+  }
+}
+
+/* Then hide About */
+@media (max-width: 760px) {
+  .nav-about-link {
+    display: none;
+  }
+
+  .navbar-logo {
+    font-size: 20px;
+  }
+
+  .navbar-links {
+    gap: 12px;
+  }
+}
+
+/* Make auth/user buttons smaller too */
+@media (max-width: 680px) {
+  .user-menu-button,
+  .register-link {
+    padding: 8px 13px;
+    font-size: 14px;
+  }
+
+  .navbar-links {
+    gap: 10px;
+  }
 }
