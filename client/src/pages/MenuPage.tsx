@@ -11,7 +11,7 @@ import {
   type Category,
 } from "../api/menuApi";
 import { getCroppedImageFile } from "../utils/cropImage";
-import "./MenuPage.css";
+import "../styles/MenuPage.css";
 
 type CropAreaPixels = {
   x: number;

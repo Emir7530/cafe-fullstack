@@ -12,7 +12,7 @@ import {
   type Category,
 } from "../api/shopApi";
 import { getCroppedImageFile } from "../utils/cropImage";
-import "./ShopPage.css";
+import "../styles/ShopPage.css";
 
 type CropAreaPixels = {
   x: number;

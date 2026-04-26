@@ -14,6 +14,33 @@ export type CreateOrderData = {
   items: CheckoutItem[];
 };
 
+export type OrderStatus = "pending" | "preparing" | "completed" | "cancelled";
+
+export type OrderItem = {
+  id: number;
+  orderId: number;
+  productId: number;
+  name: string;
+  price: number;
+  quantity: number;
+  createdAt: string;
+};
+
+export type Order = {
+  id: number;
+  userId: number;
+  customerName: string;
+  customerEmail: string;
+  phone?: string | null;
+  address?: string | null;
+  note?: string | null;
+  total: number;
+  status: OrderStatus;
+  items: OrderItem[];
+  createdAt: string;
+  updatedAt: string;
+};
+
 const getToken = () => localStorage.getItem("token");
 
 const parseResponse = async (response: Response) => {
@@ -45,7 +72,7 @@ export const createOrder = async (data: CreateOrderData) => {
   return result;
 };
 
-export const getMyOrders = async () => {
+export const getMyOrders = async (): Promise<Order[]> => {
   const response = await fetch(`${API_URL}/orders/my-orders`, {
     headers: {
       Authorization: `Bearer ${getToken()}`,
