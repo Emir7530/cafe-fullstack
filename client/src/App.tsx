@@ -4,11 +4,7 @@ import Home from "./pages/Home";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import MenuPage from "./pages/MenuPage";
-
-
-function Shop() {
-  return <h1>Shop</h1>;
-}
+import ShopPage from "./pages/ShopPage";
 
 function About() {
   return <h1>About</h1>;
@@ -28,7 +24,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/menu" element={<MenuPage />} />
-          <Route path="/shop" element={<Shop />} />
+          <Route path="/shop" element={<ShopPage />} />
           <Route path="/about" element={<About />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />

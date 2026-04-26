@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "./Navbar.css";
+import { useCart } from "../context/CartContext";
 
 function Navbar() {
   const { user, isLoggedIn, logout } = useAuth();
@@ -10,6 +11,8 @@ function Navbar() {
     logout();
     navigate("/");
   };
+
+  const { cartCount } = useCart();
   return (
     <header className="navbar">
       <Link to="/" className="navbar-logo">
@@ -61,7 +64,7 @@ function Navbar() {
 
         <Link to="/cart" className="cart-link">
           <span className="cart-icon">🛒</span>
-          <span className="cart-badge">0</span>
+          <span className="cart-badge">{cartCount}</span>
         </Link>
       </div>
     </header>
