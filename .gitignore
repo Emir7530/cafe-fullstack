@@ -35,3 +35,5 @@ server/prisma/*.db-journal
 .idea/
 .DS_Store
 Thumbs.db
+
+server/uploads

@@ -11,7 +11,7 @@ import MyOrdersPage from "./pages/MyOrdersPage";
 import AdminOrdersPage from "./pages/AdminOrdersPage";
 import AboutPage from "./pages/AboutPage";
 import LocationPage from "./pages/LocationPage";
-
+import ProfilePage from "./pages/ProfilePage";
 
 
 function App() {
@@ -31,6 +31,7 @@ function App() {
           <Route path="/my-orders" element={<MyOrdersPage />} />
           <Route path="/admin/orders" element={<AdminOrdersPage />} />
           <Route path="/location" element={<LocationPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       
     </>
