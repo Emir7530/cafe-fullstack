@@ -73,7 +73,7 @@ function Navbar() {
         ) : (
           <div className="user-menu">
             <button className="user-menu-button" type="button">
-              {user?.name?.split(" ")[0]} <span>⌄</span>
+              {user?.name?.split(" ")[0]} <span></span>
             </button>
 
             <div className="user-dropdown">
@@ -105,7 +105,7 @@ function Navbar() {
           onClick={closeMobileMenu}
           aria-label="Profile"
         >
-          👤
+        <img src="/images/user.png"  className="mobile-profile-img"/>
         </Link>
 
         <Link
