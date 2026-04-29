@@ -1,4 +1,10 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
 import Cropper from "react-easy-crop";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -7,9 +13,12 @@ import {
   createMenuCategory,
   createMenuProduct,
   updateMenuProduct,
+  deleteMenuProduct,
+  deleteMenuCategory,
   type MenuProduct,
   type Category,
 } from "../api/menuApi";
+import { getImageUrl } from "../api/config";
 import { getCroppedImageFile } from "../utils/cropImage";
 import "../styles/MenuPage.css";
 
@@ -28,8 +37,6 @@ type FormState = {
   imagePreview: string;
   categoryId: string;
 };
-
-const API_BASE_URL = "http://localhost:5000";
 
 const emptyForm: FormState = {
   name: "",
@@ -52,6 +59,7 @@ function MenuPage() {
 
   const [showProductForm, setShowProductForm] = useState(false);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [showManageCategories, setShowManageCategories] = useState(false);
 
   const [categoryName, setCategoryName] = useState("");
 
@@ -61,6 +69,13 @@ function MenuPage() {
 
   const [error, setError] = useState("");
 
+  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [priceSort, setPriceSort] = useState("default");
+  const [showFilters, setShowFilters] = useState(false);
+
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] =
@@ -69,7 +84,7 @@ function MenuPage() {
   const getFullImageUrl = (imageUrl?: string | null) => {
     if (!imageUrl) return "";
     if (imageUrl.startsWith("http")) return imageUrl;
-    return `${API_BASE_URL}${imageUrl}`;
+    return getImageUrl(imageUrl);
   };
 
   const resetCrop = () => {
@@ -102,9 +117,7 @@ function MenuPage() {
   }, []);
 
   const handleProductFormChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     setForm({
       ...form,
@@ -112,10 +125,14 @@ function MenuPage() {
     });
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
 
     if (!file) return;
+
+    if (form.imagePreview.startsWith("blob:")) {
+      URL.revokeObjectURL(form.imagePreview);
+    }
 
     setForm({
       ...form,
@@ -133,6 +150,7 @@ function MenuPage() {
     resetCrop();
     setShowProductForm(true);
     setShowCategoryForm(false);
+    setShowManageCategories(false);
   };
 
   const openEditProductForm = (product: MenuProduct) => {
@@ -151,9 +169,14 @@ function MenuPage() {
     resetCrop();
     setShowProductForm(true);
     setShowCategoryForm(false);
+    setShowManageCategories(false);
   };
 
   const closeProductForm = () => {
+    if (form.imagePreview.startsWith("blob:")) {
+      URL.revokeObjectURL(form.imagePreview);
+    }
+
     setShowProductForm(false);
     setEditingProduct(null);
     setForm(emptyForm);
@@ -166,6 +189,7 @@ function MenuPage() {
     setError("");
     setShowCategoryForm(true);
     setShowProductForm(false);
+    setShowManageCategories(false);
   };
 
   const closeCategoryForm = () => {
@@ -174,7 +198,14 @@ function MenuPage() {
     setError("");
   };
 
-  const handleCreateCategory = async (e: React.FormEvent<HTMLFormElement>) => {
+  const toggleManageCategories = () => {
+    setError("");
+    setShowManageCategories((current) => !current);
+    setShowProductForm(false);
+    setShowCategoryForm(false);
+  };
+
+  const handleCreateCategory = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!categoryName.trim()) {
@@ -203,7 +234,7 @@ function MenuPage() {
     }
   };
 
-  const handleProductSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleProductSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!form.name.trim() || !form.price || !form.categoryId) {
@@ -257,6 +288,115 @@ function MenuPage() {
     }
   };
 
+  const handleDeleteProduct = async (product: MenuProduct) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${product.name}"?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setError("");
+
+      await deleteMenuProduct(product.id);
+      await loadMenuData();
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Something went wrong.");
+      }
+    }
+  };
+
+  const handleDeleteCategory = async (category: Category) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${category.name}" category?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setError("");
+
+      await deleteMenuCategory(category.id);
+
+      if (selectedCategoryId === String(category.id)) {
+        setSelectedCategoryId("all");
+      }
+
+      await loadMenuData();
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Something went wrong.");
+      }
+    }
+  };
+
+  const clearFilters = () => {
+    setSelectedCategoryId("all");
+    setSearchTerm("");
+    setMinPrice("");
+    setMaxPrice("");
+    setPriceSort("default");
+  };
+
+  const filteredProducts = useMemo(() => {
+    return products
+      .filter((product) => {
+        const productPrice = Number(product.price);
+        const normalizedSearch = searchTerm.trim().toLowerCase();
+
+        const matchesCategory =
+          selectedCategoryId === "all" ||
+          product.categoryId === Number(selectedCategoryId);
+
+        const matchesSearch =
+          normalizedSearch === "" ||
+          product.name.toLowerCase().includes(normalizedSearch) ||
+          product.description?.toLowerCase().includes(normalizedSearch);
+
+        const matchesMinPrice =
+          minPrice === "" || productPrice >= Number(minPrice);
+
+        const matchesMaxPrice =
+          maxPrice === "" || productPrice <= Number(maxPrice);
+
+        return (
+          matchesCategory &&
+          matchesSearch &&
+          matchesMinPrice &&
+          matchesMaxPrice
+        );
+      })
+      .sort((a, b) => {
+        if (priceSort === "low-to-high") {
+          return Number(a.price) - Number(b.price);
+        }
+
+        if (priceSort === "high-to-low") {
+          return Number(b.price) - Number(a.price);
+        }
+
+        return 0;
+      });
+  }, [products, selectedCategoryId, searchTerm, minPrice, maxPrice, priceSort]);
+
+  const selectedCategoryName =
+    selectedCategoryId === "all"
+      ? "All Menu"
+      : categories.find((category) => String(category.id) === selectedCategoryId)
+          ?.name || "Menu";
+
+  const activeAdvancedFilterCount = [
+    searchTerm.trim() !== "",
+    minPrice !== "",
+    maxPrice !== "",
+    priceSort !== "default",
+  ].filter(Boolean).length;
+
   return (
     <main className="menu-page">
       <section className="menu-hero">
@@ -265,8 +405,8 @@ function MenuPage() {
         <h1>Fresh coffee, simple prices</h1>
 
         <p>
-          These items are shown for customers to view prices. Menu items are not
-          directly bought from this page.
+          Explore our drinks, desserts, and cafe favorites. These items are
+          shown for customers to view prices.
         </p>
 
         {isAdmin && (
@@ -276,7 +416,14 @@ function MenuPage() {
             </button>
 
             <button className="admin-category-button" onClick={openCategoryForm}>
-              + Add Menu Category
+              + Add Category
+            </button>
+
+            <button
+              className="admin-manage-button"
+              onClick={toggleManageCategories}
+            >
+              Manage Categories
             </button>
           </div>
         )}
@@ -309,6 +456,37 @@ function MenuPage() {
               {savingCategory ? "Adding..." : "Add Category"}
             </button>
           </form>
+        </section>
+      )}
+
+      {isAdmin && showManageCategories && (
+        <section className="menu-form-card manage-category-card">
+          <div className="menu-form-header">
+            <h2>Manage Categories</h2>
+
+            <button type="button" onClick={() => setShowManageCategories(false)}>
+              ×
+            </button>
+          </div>
+
+          {categories.length === 0 ? (
+            <p className="admin-empty-text">No categories yet.</p>
+          ) : (
+            <div className="manage-category-list">
+              {categories.map((category) => (
+                <div key={category.id} className="manage-category-row">
+                  <span>{category.name}</span>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteCategory(category)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
 
@@ -383,7 +561,14 @@ function MenuPage() {
               />
             </div>
 
-            {form.imagePreview && (
+            {editingProduct && form.imagePreview && !form.image && (
+              <div className="current-image-preview">
+                <p>Current Image</p>
+                <img src={form.imagePreview} alt={form.name} />
+              </div>
+            )}
+
+            {form.image && form.imagePreview && (
               <div className="crop-editor-section">
                 <label className="crop-editor-title">
                   Select Square Image Area
@@ -429,28 +614,151 @@ function MenuPage() {
               {savingProduct
                 ? "Saving..."
                 : editingProduct
-                ? "Save Changes"
-                : "Add Menu Item"}
+                  ? "Save Changes"
+                  : "Add Menu Item"}
             </button>
           </form>
         </section>
       )}
 
-      <section className="menu-content">
+      <section className="menu-main">
+        <div className="menu-toolbar">
+          <div className="menu-toolbar-top">
+            <div className="category-tabs">
+              <button
+                className={selectedCategoryId === "all" ? "active" : ""}
+                onClick={() => setSelectedCategoryId("all")}
+                type="button"
+              >
+                All Menu
+              </button>
+
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  className={
+                    selectedCategoryId === String(category.id) ? "active" : ""
+                  }
+                  onClick={() => setSelectedCategoryId(String(category.id))}
+                  type="button"
+                >
+                  {category.name}
+                </button>
+              ))}
+            </div>
+
+            <button
+              className={`menu-filter-toggle ${showFilters ? "active" : ""}`}
+              onClick={() => setShowFilters((current) => !current)}
+              type="button"
+              aria-expanded={showFilters}
+            >
+              {showFilters
+                ? "Hide Filters"
+                : `Filters${
+                    activeAdvancedFilterCount > 0
+                      ? ` (${activeAdvancedFilterCount})`
+                      : ""
+                  }`}
+            </button>
+          </div>
+
+          {showFilters && (
+            <div className="menu-filter-panel">
+              <div className="menu-result-summary">
+                <p>Showing</p>
+                <h2>
+                  {loading
+                    ? "Loading..."
+                    : `${filteredProducts.length} ${
+                        filteredProducts.length === 1 ? "item" : "items"
+                      }`}
+                </h2>
+                <span>{selectedCategoryName}</span>
+              </div>
+
+              <div className="menu-controls">
+                <div className="menu-search-field">
+                  <label>Search</label>
+                  <input
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search coffee, dessert..."
+                  />
+                </div>
+
+                <div className="price-filter-field">
+                  <label>Min Price</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)}
+                    placeholder="0"
+                  />
+                </div>
+
+                <div className="price-filter-field">
+                  <label>Max Price</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
+                    placeholder="300"
+                  />
+                </div>
+
+                <div className="price-filter-field">
+                  <label>Sort</label>
+                  <select
+                    value={priceSort}
+                    onChange={(e) => setPriceSort(e.target.value)}
+                  >
+                    <option value="default">Default</option>
+                    <option value="low-to-high">Price: Low to High</option>
+                    <option value="high-to-low">Price: High to Low</option>
+                  </select>
+                </div>
+
+                <button
+                  className="clear-filter-button"
+                  onClick={clearFilters}
+                  type="button"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
         {loading ? (
-          <p>Loading menu...</p>
+          <p className="menu-status-text">Loading menu...</p>
         ) : products.length === 0 ? (
-          <p>No menu items yet.</p>
+          <p className="menu-status-text">No menu items yet.</p>
+        ) : filteredProducts.length === 0 ? (
+          <div className="empty-filter-result">
+            <h3>No items found</h3>
+            <p>Try changing the category, search text, or price filters.</p>
+            <button onClick={clearFilters} type="button">
+              Clear Filters
+            </button>
+          </div>
         ) : (
           <div className="menu-grid">
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
               <article key={product.id} className="menu-item-card">
-                {product.imageUrl && (
+                {product.imageUrl ? (
                   <div className="menu-item-image">
                     <img
                       src={getFullImageUrl(product.imageUrl)}
                       alt={product.name}
                     />
+                  </div>
+                ) : (
+                  <div className="menu-item-image menu-item-placeholder">
+                    <span>{product.name.charAt(0)}</span>
                   </div>
                 )}
 
@@ -460,19 +768,24 @@ function MenuPage() {
                     <span>{Number(product.price).toFixed(2)} TL</span>
                   </div>
 
-                  <p className="menu-category">{product.category.name}</p>
-
-                  {product.description && (
-                    <p className="menu-description">{product.description}</p>
-                  )}
-
                   {isAdmin && (
-                    <button
-                      className="edit-menu-button"
-                      onClick={() => openEditProductForm(product)}
-                    >
-                      Edit Item
-                    </button>
+                    <div className="menu-item-admin-actions">
+                      <button
+                        className="edit-menu-button"
+                        onClick={() => openEditProductForm(product)}
+                        type="button"
+                      >
+                        Edit Item
+                      </button>
+
+                      <button
+                        className="delete-menu-button"
+                        onClick={() => handleDeleteProduct(product)}
+                        type="button"
+                      >
+                        Delete Item
+                      </button>
+                    </div>
                   )}
                 </div>
               </article>

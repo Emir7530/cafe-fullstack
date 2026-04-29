@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5000/api";
+import { API_URL } from "./config";
 
 export type Category = {
   id: number;
@@ -131,6 +131,40 @@ export const updateMenuProduct = async (
 
   if (!response.ok) {
     throw new Error(result.message || "Failed to update product");
+  }
+
+  return result;
+};
+
+export const deleteMenuProduct = async (productId: number) => {
+  const response = await fetch(`${API_URL}/products/${productId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  const result = await parseResponse(response);
+
+  if (!response.ok) {
+    throw new Error(result.message || "Failed to delete product");
+  }
+
+  return result;
+};
+
+export const deleteMenuCategory = async (categoryId: number) => {
+  const response = await fetch(`${API_URL}/categories/${categoryId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  const result = await parseResponse(response);
+
+  if (!response.ok) {
+    throw new Error(result.message || "Failed to delete category");
   }
 
   return result;

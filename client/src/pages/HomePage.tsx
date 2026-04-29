@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getMenuProducts, type MenuProduct } from "../api/menuApi";
+import { getImageUrl } from "../api/config";
 import "../styles/HomePage.css";
 
 const heroImages = [
@@ -8,8 +9,6 @@ const heroImages = [
   "/images/eunoia-hero-2.png",
   "/images/eunoia-hero-3.png",
 ];
-
-const API_ORIGIN = "http://localhost:5000";
 
 function Home() {
   const [currentImage, setCurrentImage] = useState(0);
@@ -49,7 +48,7 @@ function Home() {
       return imageUrl;
     }
 
-    return `${API_ORIGIN}${imageUrl}`;
+    return getImageUrl(imageUrl);
   };
 
   const goToNextImage = () => {
@@ -281,7 +280,7 @@ function Home() {
             <Link to="/menu">Menu</Link>
             <Link to="/shop">Shop</Link>
             <Link to="/about">About</Link>
-            <Link to="/locations">Locations</Link>
+            <Link to="/location">Locations</Link>
           </div>
         </div>
 

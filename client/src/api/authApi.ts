@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5000/api/auth";
+import { API_URL } from "./config";
 
 type RegisterData = {
   name: string;
@@ -12,7 +12,7 @@ type LoginData = {
 };
 
 export const registerUser = async (data: RegisterData) => {
-  const response = await fetch(`${API_URL}/register`, {
+  const response = await fetch(`${API_URL}/auth/register`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -30,7 +30,7 @@ export const registerUser = async (data: RegisterData) => {
 };
 
 export const loginUser = async (data: LoginData) => {
-  const response = await fetch(`${API_URL}/login`, {
+  const response = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

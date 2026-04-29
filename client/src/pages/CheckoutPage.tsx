@@ -3,9 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { createOrder } from "../api/orderApi";
+import { getImageUrl } from "../api/config";
 import "../styles/CheckoutPage.css";
-
-const API_BASE_URL = "http://localhost:5000";
 
 function CheckoutPage() {
     const navigate = useNavigate();
@@ -24,7 +23,7 @@ function CheckoutPage() {
     const getFullImageUrl = (imageUrl?: string | null) => {
         if (!imageUrl) return "";
         if (imageUrl.startsWith("http")) return imageUrl;
-        return `${API_BASE_URL}${imageUrl}`;
+        return getImageUrl(imageUrl);
     };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -54,7 +53,7 @@ function CheckoutPage() {
             setLoading(true);
             setError("");
 
-            const result = await createOrder({
+            await createOrder({
                 customerName,
                 customerEmail,
                 phone,

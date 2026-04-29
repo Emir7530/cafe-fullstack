@@ -11,6 +11,7 @@ import {
   type ShopProduct,
   type Category,
 } from "../api/shopApi";
+import { getImageUrl } from "../api/config";
 import { getCroppedImageFile } from "../utils/cropImage";
 import "../styles/ShopPage.css";
 
@@ -29,8 +30,6 @@ type FormState = {
   imagePreview: string;
   categoryId: string;
 };
-
-const API_BASE_URL = "http://localhost:5000";
 
 const emptyForm: FormState = {
   name: "",
@@ -74,7 +73,7 @@ function ShopPage() {
   const getFullImageUrl = (imageUrl?: string | null) => {
     if (!imageUrl) return "";
     if (imageUrl.startsWith("http")) return imageUrl;
-    return `${API_BASE_URL}${imageUrl}`;
+    return getImageUrl(imageUrl);
   };
 
   const resetCrop = () => {
@@ -466,8 +465,8 @@ function ShopPage() {
               {savingProduct
                 ? "Saving..."
                 : editingProduct
-                ? "Save Changes"
-                : "Add Shop Item"}
+                  ? "Save Changes"
+                  : "Add Shop Item"}
             </button>
           </form>
         </section>
@@ -499,10 +498,10 @@ function ShopPage() {
 
                   <p className="shop-category">{product.category.name}</p>
 
-                  {product.description && (
-                    <p className="shop-description">{product.description}</p>
-                  )}
-
+                  <p className="shop-description">
+                    {product.description || ""}
+                  </p>
+                  
                   <div className="shop-cart-actions">
                     <div className="quantity-control">
                       <button

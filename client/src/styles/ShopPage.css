@@ -259,6 +259,7 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 22px;
+  align-items: stretch;
 }
 
 .shop-item-card {
@@ -266,6 +267,9 @@
   border-radius: 22px;
   overflow: hidden;
   box-shadow: 0 16px 40px rgba(47, 33, 24, 0.1);
+    height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .shop-item-image {
@@ -284,6 +288,10 @@
 
 .shop-item-content {
   padding: 18px;
+
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .shop-item-top {
@@ -316,7 +324,9 @@
 .shop-description {
   color: #766657;
   line-height: 1.6;
-  margin: 0;
+  margin: 0 0 18px;
+
+  min-height: 35px;
 }
 
 .shop-cart-actions {
@@ -324,7 +334,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  margin-top: 20px;
+
+  margin-top: auto;
 }
 
 .quantity-control {

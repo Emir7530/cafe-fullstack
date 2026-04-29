@@ -1,8 +1,7 @@
 import { Link } from "react-router-dom";
+import { getImageUrl } from "../api/config";
 import { useCart } from "../context/CartContext";
 import "../styles/CartPage.css";
-
-const API_BASE_URL = "http://localhost:5000";
 
 function CartPage() {
     const {
@@ -17,7 +16,7 @@ function CartPage() {
     const getFullImageUrl = (imageUrl?: string | null) => {
         if (!imageUrl) return "";
         if (imageUrl.startsWith("http")) return imageUrl;
-        return `${API_BASE_URL}${imageUrl}`;
+        return getImageUrl(imageUrl);
     };
 
     return (
