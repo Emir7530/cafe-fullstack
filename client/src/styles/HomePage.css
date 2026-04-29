@@ -361,6 +361,7 @@
   border: 1px solid #ead8c4;
   border-radius: 28px;
   overflow: hidden;
+  height: 390px;
 
   display: grid;
   grid-template-columns: 42% 1fr;
@@ -376,7 +377,8 @@
       #e7caa7
     );
 
-  min-height: 330px;
+  min-height: 0;
+  height: 100%;
 
   display: flex;
   align-items: center;
@@ -393,7 +395,7 @@
   padding: 42px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  min-height: 0;
 }
 
 .featured-info span {
@@ -408,6 +410,10 @@
   color: #2f2118;
   font-size: 38px;
   line-height: 1.08;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .featured-info p {
@@ -415,13 +421,18 @@
   color: #766657;
   font-size: 17px;
   line-height: 1.7;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .featured-card-buttons {
-  margin-top: 28px;
+  margin-top: auto;
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+  padding-top: 28px;
 }
 
 .small-btn {
@@ -535,10 +546,12 @@
 
   .featured-card {
     grid-template-columns: 1fr;
+    grid-template-rows: 280px 1fr;
+    height: 590px;
   }
 
   .featured-image-wrapper {
-    min-height: 260px;
+    height: 280px;
   }
 
   .featured-info {
@@ -600,11 +613,16 @@
   }
 
   .featured-image-wrapper {
-    min-height: 210px;
+    height: 240px;
   }
 
   .featured-info {
     padding: 24px 20px;
+  }
+
+  .featured-card {
+    grid-template-rows: 240px 1fr;
+    height: 540px;
   }
 
   .featured-info h3 {

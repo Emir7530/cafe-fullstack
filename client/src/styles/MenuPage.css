@@ -368,12 +368,18 @@
   display: flex;
   gap: 10px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding-bottom: 0;
   width: 100%;
   min-width: 0;
   max-width: 100%;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-inline: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.category-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .category-tabs button {

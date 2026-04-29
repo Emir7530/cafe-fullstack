@@ -39,6 +39,18 @@ function Home() {
     loadFeaturedItems();
   }, []);
 
+  useEffect(() => {
+    if (featuredItems.length <= 1) return;
+
+    const intervalId = window.setInterval(() => {
+      setCurrentItem((prev) =>
+        prev === featuredItems.length - 1 ? 0 : prev + 1
+      );
+    }, 2000);
+
+    return () => window.clearInterval(intervalId);
+  }, [featuredItems.length]);
+
   const getImageSrc = (imageUrl?: string | null) => {
     if (!imageUrl) {
       return "/images/product-placeholder.png";
