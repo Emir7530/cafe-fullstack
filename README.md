@@ -10,6 +10,24 @@ Full-stack cafe application with a React/Vite client and an Express/Prisma/Postg
 - Server-side order total calculation
 - Product image upload, validation, resizing, and static serving
 
+## Screenshots
+
+| Home | Menu |
+| --- | --- |
+| ![Home page](screenshots/home.png.png) | ![Menu page](screenshots/menu.png.png) |
+
+| Shop | Checkout |
+| --- | --- |
+| ![Shop page](screenshots/shop.png.png) | ![Checkout page](screenshots/checkout.png.png) |
+
+| Login | Admin Orders |
+| --- | --- |
+| ![Login page](screenshots/login.png.png) | ![Admin orders page](screenshots/admin-orders.png.png) |
+
+| About | Locations |
+| --- | --- |
+| ![About page](screenshots/about.png.png) | ![Locations page](screenshots/locations.png.png) |
+
 ## Project Structure
 
 ```text
