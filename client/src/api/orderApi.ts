@@ -1,4 +1,4 @@
-import { API_URL } from "./config";
+import { apiRequest } from "./client";
 
 type CheckoutItem = {
   productId: number;
@@ -28,7 +28,7 @@ export type OrderItem = {
 
 export type Order = {
   id: number;
-  userId: number;
+  userId: number | null;
   customerName: string;
   customerEmail: string;
   phone?: string | null;
@@ -41,87 +41,33 @@ export type Order = {
   updatedAt: string;
 };
 
-const getToken = () => localStorage.getItem("token");
-
-const parseResponse = async (response: Response) => {
-  const text = await response.text();
-
-  try {
-    return text ? JSON.parse(text) : {};
-  } catch {
-    return {};
-  }
-};
-
 export const createOrder = async (data: CreateOrderData) => {
-  const response = await fetch(`${API_URL}/orders`, {
+  return apiRequest<{ message: string; order: Order }>("/orders", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-    body: JSON.stringify(data),
+    auth: true,
+    json: data,
   });
-
-  const result = await parseResponse(response);
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to create order");
-  }
-
-  return result;
 };
 
 export const getMyOrders = async (): Promise<Order[]> => {
-  const response = await fetch(`${API_URL}/orders/my-orders`, {
-    headers: {
-      Authorization: `Bearer ${getToken()}`,
-    },
+  return apiRequest<Order[]>("/orders/my-orders", {
+    auth: true,
   });
-
-  const result = await parseResponse(response);
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to fetch orders");
-  }
-
-  return result;
 };
 
 export const getAllOrders = async (): Promise<Order[]> => {
-  const response = await fetch(`${API_URL}/orders`, {
-    headers: {
-      Authorization: `Bearer ${getToken()}`,
-    },
+  return apiRequest<Order[]>("/orders", {
+    auth: true,
   });
-
-  const result = await parseResponse(response);
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to fetch all orders");
-  }
-
-  return result;
 };
 
 export const updateOrderStatus = async (
   orderId: number,
   status: OrderStatus
 ) => {
-  const response = await fetch(`${API_URL}/orders/${orderId}/status`, {
+  return apiRequest<{ message: string; order: Order }>(`/orders/${orderId}/status`, {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-    body: JSON.stringify({ status }),
+    auth: true,
+    json: { status },
   });
-
-  const result = await parseResponse(response);
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to update order status");
-  }
-
-  return result;
 };

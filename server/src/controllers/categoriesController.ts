@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { Prisma } from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
 
 export const getCategories = async (req: Request, res: Response) => {
@@ -47,8 +48,9 @@ export const getCategories = async (req: Request, res: Response) => {
 export const createCategory = async (req: Request, res: Response) => {
   try {
     const { name, section } = req.body;
+    const normalizedName = typeof name === "string" ? name.trim() : "";
 
-    if (!name || !section) {
+    if (!normalizedName || !section) {
       return res.status(400).json({
         message: "name and section are required",
       });
@@ -64,13 +66,22 @@ export const createCategory = async (req: Request, res: Response) => {
 
     const category = await prisma.category.create({
       data: {
-        name: String(name),
+        name: normalizedName,
         section: sectionValue,
       },
     });
 
     res.status(201).json(category);
   } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return res.status(409).json({
+        message: "Category already exists in this section.",
+      });
+    }
+
     console.error("Error creating category:", error);
     res.status(500).json({
       message: "Failed to create category",

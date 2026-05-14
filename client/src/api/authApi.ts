@@ -1,4 +1,18 @@
-import { API_URL } from "./config";
+import { apiRequest } from "./client";
+
+export type User = {
+  id: number;
+  name: string;
+  email: string;
+  role: "customer" | "admin";
+  createdAt?: string;
+};
+
+type AuthResponse = {
+  message: string;
+  token: string;
+  user: User;
+};
 
 type RegisterData = {
   name: string;
@@ -12,37 +26,21 @@ type LoginData = {
 };
 
 export const registerUser = async (data: RegisterData) => {
-  const response = await fetch(`${API_URL}/auth/register`, {
+  return apiRequest<AuthResponse>("/auth/register", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
+    json: data,
   });
-
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Register failed");
-  }
-
-  return result;
 };
 
 export const loginUser = async (data: LoginData) => {
-  const response = await fetch(`${API_URL}/auth/login`, {
+  return apiRequest<AuthResponse>("/auth/login", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
+    json: data,
   });
+};
 
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Login failed");
-  }
-
-  return result;
+export const getCurrentUser = async () => {
+  return apiRequest<{ user: User }>("/auth/me", {
+    auth: true,
+  });
 };

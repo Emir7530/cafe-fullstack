@@ -2,7 +2,7 @@ import { useState } from "react";
 import { registerUser } from "../api/authApi";
 import "../styles/Auth.css";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 
 function RegisterPage() {
   const [name, setName] = useState("");

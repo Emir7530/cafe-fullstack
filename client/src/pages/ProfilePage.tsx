@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/useAuth";
+import { useCart } from "../context/useCart";
 import { getMyOrders, type Order } from "../api/orderApi";
 import "../styles/ProfilePage.css";
 
@@ -189,7 +189,7 @@ function ProfilePage() {
             <Link to="/cart" className="profile-action-link">
               <span>Cart</span>
               <p>
-                {cartCount} item{cartCount !== 1 ? "s" : ""} ·{" "}
+                {cartCount} item{cartCount !== 1 ? "s" : ""} /{" "}
                 {cartTotal.toFixed(2)} TL
               </p>
             </Link>

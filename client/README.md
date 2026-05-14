@@ -1,37 +1,24 @@
-# Eunoia Café Full-Stack Website
+# Eunoia Cafe Client
 
-A full-stack café web application with customer menu/shop pages, authentication, cart/checkout flow, and admin product/order management.
+React + TypeScript + Vite frontend for the Eunoia Cafe full-stack app.
 
-## Features
+## App Context
 
-- User registration and login with JWT authentication
-- Customer menu and shop pages
-- Product filtering by category
-- Cart and checkout flow
-- Order creation and order status tracking
-- Admin-only product/category/order management
-- Image uploads for products using Multer
-- PostgreSQL database with Prisma ORM
+The full application includes customer menu/shop pages, authentication, cart and checkout flow, order tracking, and admin product/category/order management.
 
-## Tech Stack
+## Frontend Stack
 
-Frontend:
 - React
 - TypeScript
 - Vite
 - CSS
 
-Backend:
-- Node.js
-- Express.js
-- TypeScript
-- PostgreSQL
-- Prisma
-- JWT
-- Multer
+## Commands
 
-## Project Structure
+```bash
+npm run dev
+npm run lint
+npm run build
+```
 
-```txt
-client/
-server/
+Use `VITE_API_BASE_URL` in `.env` to point the client at the API.

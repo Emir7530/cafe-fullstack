@@ -1,4 +1,4 @@
-import { API_URL } from "./config";
+import { apiRequest } from "./client";
 
 export type Category = {
   id: number;
@@ -24,8 +24,6 @@ export type ProductFormData = {
   image?: File | null;
 };
 
-const getToken = () => localStorage.getItem("token");
-
 const buildProductFormData = (data: ProductFormData) => {
   const formData = new FormData();
 
@@ -41,97 +39,64 @@ const buildProductFormData = (data: ProductFormData) => {
   return formData;
 };
 
-const parseResponse = async (response: Response) => {
-  const text = await response.text();
-
-  try {
-    return text ? JSON.parse(text) : {};
-  } catch {
-    return {};
-  }
-};
-
 export const getShopProducts = async (): Promise<ShopProduct[]> => {
-  const response = await fetch(`${API_URL}/products?section=shop&limit=100`);
-
-  const result = await parseResponse(response);
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to fetch shop products");
-  }
+  const result = await apiRequest<{ products: ShopProduct[] }>(
+    "/products?section=shop&limit=100"
+  );
 
   return result.products || [];
 };
 
 export const getShopCategories = async (): Promise<Category[]> => {
-  const response = await fetch(`${API_URL}/categories?section=shop`);
-
-  const result = await parseResponse(response);
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to fetch shop categories");
-  }
-
-  return result;
+  return apiRequest<Category[]>("/categories?section=shop");
 };
 
 export const createShopCategory = async (name: string) => {
-  const response = await fetch(`${API_URL}/categories`, {
+  return apiRequest<Category>("/categories", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-    body: JSON.stringify({
+    auth: true,
+    json: {
       name,
       section: "shop",
-    }),
+    },
   });
-
-  const result = await parseResponse(response);
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to create category");
-  }
-
-  return result;
 };
 
 export const createShopProduct = async (data: ProductFormData) => {
-  const response = await fetch(`${API_URL}/products`, {
+  return apiRequest<{ message: string; product: ShopProduct }>("/products", {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${getToken()}`,
-    },
+    auth: true,
     body: buildProductFormData(data),
   });
-
-  const result = await parseResponse(response);
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to create product");
-  }
-
-  return result;
 };
 
 export const updateShopProduct = async (
   productId: number,
   data: ProductFormData
 ) => {
-  const response = await fetch(`${API_URL}/products/${productId}`, {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${getToken()}`,
-    },
-    body: buildProductFormData(data),
+  return apiRequest<{ message: string; product: ShopProduct }>(
+    `/products/${productId}`,
+    {
+      method: "PUT",
+      auth: true,
+      body: buildProductFormData(data),
+    }
+  );
+};
+
+export const deleteShopProduct = async (productId: number) => {
+  return apiRequest<{ message: string }>(`/products/${productId}`, {
+    method: "DELETE",
+    auth: true,
   });
+};
 
-  const result = await parseResponse(response);
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to update product");
-  }
-
-  return result;
+export const deleteShopCategory = async (categoryId: number) => {
+  return apiRequest<{ message: string; category: Category }>(
+    `/categories/${categoryId}`,
+    {
+      method: "DELETE",
+      auth: true,
+    }
+  );
 };

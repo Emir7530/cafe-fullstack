@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import Cropper from "react-easy-crop";
-import { useAuth } from "../context/AuthContext";
-import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/useAuth";
+import { useCart } from "../context/useCart";
 import {
   getShopProducts,
   getShopCategories,
   createShopCategory,
   createShopProduct,
   updateShopProduct,
+  deleteShopProduct,
+  deleteShopCategory,
   type ShopProduct,
   type Category,
 } from "../api/shopApi";
@@ -54,6 +56,7 @@ function ShopPage() {
 
   const [showProductForm, setShowProductForm] = useState(false);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [showManageCategories, setShowManageCategories] = useState(false);
 
   const [categoryName, setCategoryName] = useState("");
   const [quantities, setQuantities] = useState<Record<number, number>>({});
@@ -168,6 +171,7 @@ function ShopPage() {
     resetCrop();
     setShowProductForm(true);
     setShowCategoryForm(false);
+    setShowManageCategories(false);
   };
 
   const openEditProductForm = (product: ShopProduct) => {
@@ -186,6 +190,7 @@ function ShopPage() {
     resetCrop();
     setShowProductForm(true);
     setShowCategoryForm(false);
+    setShowManageCategories(false);
   };
 
   const closeProductForm = () => {
@@ -201,12 +206,20 @@ function ShopPage() {
     setError("");
     setShowCategoryForm(true);
     setShowProductForm(false);
+    setShowManageCategories(false);
   };
 
   const closeCategoryForm = () => {
     setShowCategoryForm(false);
     setCategoryName("");
     setError("");
+  };
+
+  const toggleManageCategories = () => {
+    setError("");
+    setShowManageCategories((current) => !current);
+    setShowProductForm(false);
+    setShowCategoryForm(false);
   };
 
   const handleCreateCategory = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -292,6 +305,48 @@ function ShopPage() {
     }
   };
 
+  const handleDeleteProduct = async (product: ShopProduct) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${product.name}"?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setError("");
+
+      await deleteShopProduct(product.id);
+      await loadShopData();
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Something went wrong.");
+      }
+    }
+  };
+
+  const handleDeleteCategory = async (category: Category) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${category.name}" category?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setError("");
+
+      await deleteShopCategory(category.id);
+      await loadShopData();
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Something went wrong.");
+      }
+    }
+  };
+
   return (
     <main className="shop-page">
       <section className="shop-hero">
@@ -313,6 +368,10 @@ function ShopPage() {
             <button className="admin-category-button" onClick={openCategoryForm}>
               + Add Shop Category
             </button>
+
+            <button className="admin-category-button" onClick={toggleManageCategories}>
+              Manage Categories
+            </button>
           </div>
         )}
       </section>
@@ -326,7 +385,7 @@ function ShopPage() {
             <h2>Add Shop Category</h2>
 
             <button type="button" onClick={closeCategoryForm}>
-              ×
+              X
             </button>
           </div>
 
@@ -348,13 +407,44 @@ function ShopPage() {
         </section>
       )}
 
+      {isAdmin && showManageCategories && (
+        <section className="shop-form-card">
+          <div className="shop-form-header">
+            <h2>Manage Shop Categories</h2>
+
+            <button type="button" onClick={() => setShowManageCategories(false)}>
+              X
+            </button>
+          </div>
+
+          {categories.length === 0 ? (
+            <p>No categories yet.</p>
+          ) : (
+            <div className="manage-category-list">
+              {categories.map((category) => (
+                <div key={category.id} className="manage-category-row">
+                  <span>{category.name}</span>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteCategory(category)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
       {isAdmin && showProductForm && (
         <section className="shop-form-card">
           <div className="shop-form-header">
             <h2>{editingProduct ? "Edit Shop Item" : "Add Shop Item"}</h2>
 
             <button type="button" onClick={closeProductForm}>
-              ×
+              X
             </button>
           </div>
 
@@ -534,12 +624,23 @@ function ShopPage() {
                   </div>
 
                   {isAdmin && (
-                    <button
-                      className="edit-shop-button"
-                      onClick={() => openEditProductForm(product)}
-                    >
-                      Edit Item
-                    </button>
+                    <div className="shop-item-admin-actions">
+                      <button
+                        className="edit-shop-button"
+                        onClick={() => openEditProductForm(product)}
+                        type="button"
+                      >
+                        Edit Item
+                      </button>
+
+                      <button
+                        className="delete-shop-button"
+                        onClick={() => handleDeleteProduct(product)}
+                        type="button"
+                      >
+                        Delete Item
+                      </button>
+                    </div>
                   )}
                 </div>
               </article>

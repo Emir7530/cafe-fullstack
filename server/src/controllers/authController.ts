@@ -2,19 +2,16 @@ import type { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { prisma } from "../lib/prisma";
+import type { AuthRequest } from "../middlewares/authMiddleware";
 
-const createToken = (userId: number, role: string) => {
+const createToken = (userId: number) => {
   const secret = process.env.JWT_SECRET;
 
   if (!secret) {
     throw new Error("JWT_SECRET is not set.");
   }
 
-  return jwt.sign(
-    { userId, role },
-    secret,
-    { expiresIn: "7d" }
-  );
+  return jwt.sign({ userId }, secret, { expiresIn: "7d" });
 };
 
 export const register = async (req: Request, res: Response) => {
@@ -25,11 +22,14 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Name, email and password are required." });
     }
 
-    if (typeof name !== "string" || !name.trim()) {
+    const normalizedName = String(name).trim();
+    const normalizedEmail = String(email).trim().toLowerCase();
+
+    if (typeof name !== "string" || !normalizedName) {
       return res.status(400).json({ message: "Name is required." });
     }
 
-    if (typeof email !== "string" || !email.includes("@")) {
+    if (typeof email !== "string" || !normalizedEmail.includes("@")) {
       return res.status(400).json({ message: "Valid email is required." });
     }
 
@@ -38,7 +38,7 @@ export const register = async (req: Request, res: Response) => {
     }
 
     const existingUser = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
+      where: { email: normalizedEmail },
     });
 
     if (existingUser) {
@@ -49,8 +49,8 @@ export const register = async (req: Request, res: Response) => {
 
     const user = await prisma.user.create({
       data: {
-        name: name.trim(),
-        email: email.toLowerCase(),
+        name: normalizedName,
+        email: normalizedEmail,
         password: hashedPassword,
       },
       select: {
@@ -62,7 +62,7 @@ export const register = async (req: Request, res: Response) => {
       },
     });
 
-    const token = createToken(user.id, user.role);
+    const token = createToken(user.id);
 
     res.status(201).json({
       message: "Registered successfully.",
@@ -83,8 +83,10 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Email and password are required." });
     }
 
+    const normalizedEmail = String(email).trim().toLowerCase();
+
     const user = await prisma.user.findUnique({
-      where: { email: String(email).toLowerCase() },
+      where: { email: normalizedEmail },
     });
 
     if (!user) {
@@ -97,7 +99,7 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Invalid email or password." });
     }
 
-    const token = createToken(user.id, user.role);
+    const token = createToken(user.id);
 
     res.json({
       message: "Logged in successfully.",
@@ -111,6 +113,36 @@ export const login = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Login error:", error);
+    res.status(500).json({ message: "Server error." });
+  }
+};
+
+export const getMe = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authorized." });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: req.user.userId,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(401).json({ message: "Not authorized, user not found." });
+    }
+
+    res.json({ user });
+  } catch (error) {
+    console.error("Get me error:", error);
     res.status(500).json({ message: "Server error." });
   }
 };

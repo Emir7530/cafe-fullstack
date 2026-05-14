@@ -1,0 +1,93 @@
+.image-crop-editor {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 16px;
+  background-color: #fffaf5;
+  border: 1px solid #e5d3c0;
+  border-radius: 20px;
+  padding: 20px;
+}
+
+.image-crop-editor-preview {
+  width: min(100%, 430px);
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 18px;
+  background-color: #f1dfc8;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  box-shadow: inset 0 0 0 1px rgba(59, 31, 18, 0.08);
+}
+
+.image-crop-editor-preview:active {
+  cursor: grabbing;
+}
+
+.image-crop-editor-preview img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transform-origin: center;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.image-crop-editor-controls {
+  display: flex;
+  align-items: end;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.image-crop-editor-controls label {
+  flex: 1;
+  min-width: 220px;
+  display: grid;
+  gap: 8px;
+  color: #3b2b20;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.image-crop-editor-controls input {
+  width: 100%;
+  cursor: pointer;
+}
+
+.image-crop-editor-controls button {
+  border: none;
+  border-radius: 999px;
+  background-color: #fff3e4;
+  color: #7f5233;
+  padding: 12px 18px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.image-crop-editor-controls button:hover {
+  background-color: #f2ddc5;
+}
+
+.image-crop-editor p {
+  margin: 0;
+  color: #766657;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .image-crop-editor {
+    padding: 16px;
+  }
+
+  .image-crop-editor-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .image-crop-editor-controls label {
+    min-width: 0;
+  }
+}

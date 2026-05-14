@@ -1,4 +1,5 @@
-import { Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
+import { Navigate, Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import RegisterPage from "./pages/RegisterPage";
@@ -12,11 +13,47 @@ import AdminOrdersPage from "./pages/AdminOrdersPage";
 import AboutPage from "./pages/AboutPage";
 import LocationPage from "./pages/LocationPage";
 import ProfilePage from "./pages/ProfilePage";
+import { useAuth } from "./context/useAuth";
 
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  const { isLoggedIn } = useAuth();
+
+  return isLoggedIn ? children : <Navigate to="/login" replace />;
+}
+
+function RequireAdmin({ children }: { children: React.ReactNode }) {
+  const { user, isLoggedIn } = useAuth();
+
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return user?.role === "admin" ? children : <Navigate to="/" replace />;
+}
+
+function NotFoundPage() {
+  return (
+    <main style={{ minHeight: "70vh", padding: "96px 24px", textAlign: "center" }}>
+      <h1>Page not found</h1>
+      <p>The page you are looking for does not exist.</p>
+    </main>
+  );
+}
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [pathname]);
+
+  return null;
+}
 
 function App() {
   return (
     <>
+      <ScrollToTop />
       <Navbar />
 
         <Routes>
@@ -27,11 +64,40 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/cart" element={<CartPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/my-orders" element={<MyOrdersPage />} />
-          <Route path="/admin/orders" element={<AdminOrdersPage />} />
+          <Route
+            path="/checkout"
+            element={
+              <RequireAuth>
+                <CheckoutPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/my-orders"
+            element={
+              <RequireAuth>
+                <MyOrdersPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/admin/orders"
+            element={
+              <RequireAdmin>
+                <AdminOrdersPage />
+              </RequireAdmin>
+            }
+          />
           <Route path="/location" element={<LocationPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          <Route
+            path="/profile"
+            element={
+              <RequireAuth>
+                <ProfilePage />
+              </RequireAuth>
+            }
+          />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       
     </>

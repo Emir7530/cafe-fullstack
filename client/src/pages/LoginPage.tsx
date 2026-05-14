@@ -2,7 +2,7 @@ import { useState } from "react";
 import { loginUser } from "../api/authApi";
 import "../styles/Auth.css";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 
 function LoginPage() {
     const [email, setEmail] = useState("");
@@ -32,8 +32,6 @@ function LoginPage() {
 
             setSuccess("Logged in successfully.");
 
-            // Later you can redirect to home/admin page here
-            // window.location.href = "/";
         } catch (err) {
             if (err instanceof Error) {
                 setError(err.message);

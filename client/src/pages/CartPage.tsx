@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { getImageUrl } from "../api/config";
-import { useCart } from "../context/CartContext";
+import { useCart } from "../context/useCart";
 import "../styles/CartPage.css";
 
 function CartPage() {

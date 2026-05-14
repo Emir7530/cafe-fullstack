@@ -2,11 +2,10 @@ import type { Response } from "express";
 import { Prisma } from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import type { AuthRequest } from "../middlewares/authMiddleware";
-
-type CheckoutItem = {
-    productId: number;
-    quantity: number;
-};
+import {
+    normalizeCheckoutItems,
+    type CheckoutItem,
+} from "../utils/orderValidation";
 
 export const createOrder = async (req: AuthRequest, res: Response) => {
     try {
@@ -16,39 +15,37 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
 
         const { customerName, customerEmail, phone, address, note, items } = req.body;
 
+        const normalizedCustomerName = String(customerName || "").trim();
+        const normalizedCustomerEmail = String(customerEmail || "").trim().toLowerCase();
+        const normalizedPhone = String(phone || "").trim();
+        const normalizedAddress = String(address || "").trim();
+        const normalizedNote = note ? String(note).trim() : null;
+
         if (
-            !customerName?.trim() ||
-            !customerEmail?.trim() ||
-            !phone?.trim() ||
-            !address?.trim()
+            !normalizedCustomerName ||
+            !normalizedCustomerEmail ||
+            !normalizedPhone ||
+            !normalizedAddress
         ) {
             return res.status(400).json({
                 message: "Customer name, email, phone and address are required.",
             });
         }
 
-        if (!Array.isArray(items) || items.length === 0) {
+        if (!normalizedCustomerEmail.includes("@")) {
             return res.status(400).json({
-                message: "Order must include at least one item.",
+                message: "Valid email is required.",
             });
         }
 
-        const normalizedItems: CheckoutItem[] = items.map((item) => ({
-            productId: Number(item.productId),
-            quantity: Number(item.quantity),
-        }));
+        let normalizedItems: CheckoutItem[];
 
-        const invalidItem = normalizedItems.find(
-            (item) =>
-                isNaN(item.productId) ||
-                isNaN(item.quantity) ||
-                item.productId <= 0 ||
-                item.quantity <= 0
-        );
-
-        if (invalidItem) {
+        try {
+            normalizedItems = normalizeCheckoutItems(items);
+        } catch (error) {
             return res.status(400).json({
-                message: "Invalid order item.",
+                message:
+                    error instanceof Error ? error.message : "Invalid order item.",
             });
         }
 
@@ -75,9 +72,10 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
         }
 
         let total = new Prisma.Decimal(0);
+        const productMap = new Map(products.map((product) => [product.id, product]));
 
         const orderItemsData = normalizedItems.map((item) => {
-            const product = products.find((p) => p.id === item.productId);
+            const product = productMap.get(item.productId);
 
             if (!product) {
                 throw new Error("Product not found.");
@@ -97,11 +95,11 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
         const order = await prisma.order.create({
             data: {
                 userId: req.user.userId,
-                customerName: String(customerName).trim(),
-                customerEmail: String(customerEmail).trim().toLowerCase(),
-                phone: String(phone).trim(),
-                address: String(address).trim(),
-                note: note ? String(note).trim() : null,
+                customerName: normalizedCustomerName,
+                customerEmail: normalizedCustomerEmail,
+                phone: normalizedPhone,
+                address: normalizedAddress,
+                note: normalizedNote,
                 total,
                 items: {
                     create: orderItemsData,

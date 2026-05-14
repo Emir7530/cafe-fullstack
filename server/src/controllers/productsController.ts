@@ -1,11 +1,45 @@
 import type { Request, Response } from "express";
 import { Prisma } from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
+import {
+  deleteUploadedProductImage,
+  saveUploadedProductImage,
+} from "../middlewares/uploadMiddleware";
 
 const formatProduct = <T extends { price: Prisma.Decimal }>(product: T) => ({
   ...product,
   price: Number(product.price),
 });
+
+const readOptionalNumber = (value: unknown, fieldName: string) => {
+  if (value === undefined || value === null || value === "") {
+    return undefined;
+  }
+
+  const parsedValue = Number(value);
+
+  if (!Number.isFinite(parsedValue)) {
+    throw new Error(`${fieldName} must be a valid number`);
+  }
+
+  return parsedValue;
+};
+
+const readImageCropSettings = (body: Request["body"]) => {
+  const imageCropX = readOptionalNumber(body.imageCropX, "imageCropX");
+  const imageCropY = readOptionalNumber(body.imageCropY, "imageCropY");
+  const imageZoom = readOptionalNumber(body.imageZoom, "imageZoom");
+
+  if (imageZoom !== undefined && imageZoom < 1) {
+    throw new Error("imageZoom must be greater than or equal to 1");
+  }
+
+  return {
+    imageCropX,
+    imageCropY,
+    imageZoom,
+  };
+};
 
 export const getProducts = async (req: Request, res: Response) => {
   try {
@@ -158,13 +192,25 @@ export const getProductById = async (req: Request, res: Response) => {
 };
 
 export const createProduct = async (req: Request, res: Response) => {
+  let imageUrl: string | null = null;
+
   try {
     const { name, price, description, categoryId } = req.body;
+    let cropSettings: ReturnType<typeof readImageCropSettings>;
+
+    try {
+      cropSettings = readImageCropSettings(req.body);
+    } catch (error) {
+      return res.status(400).json({
+        message:
+          error instanceof Error ? error.message : "Crop settings are invalid",
+      });
+    }
 
     const file = req.file;
-    const imageUrl = file ? `/uploads/${file.filename}` : null;
+    const normalizedName = typeof name === "string" ? name.trim() : "";
 
-    if (!name || price === undefined || categoryId === undefined) {
+    if (!normalizedName || price === undefined || categoryId === undefined) {
       return res.status(400).json({
         message: "name, price, and categoryId are required",
       });
@@ -198,12 +244,26 @@ export const createProduct = async (req: Request, res: Response) => {
       });
     }
 
+    if (file) {
+      try {
+        imageUrl = await saveUploadedProductImage(file);
+      } catch (error) {
+        return res.status(400).json({
+          message:
+            error instanceof Error ? error.message : "Uploaded image is invalid.",
+        });
+      }
+    }
+
     const product = await prisma.product.create({
       data: {
-        name: String(name).trim(),
+        name: normalizedName,
         price: new Prisma.Decimal(String(price)),
         description: description ? String(description).trim() : null,
         imageUrl,
+        imageCropX: cropSettings.imageCropX ?? 0,
+        imageCropY: cropSettings.imageCropY ?? 0,
+        imageZoom: cropSettings.imageZoom ?? 1,
         categoryId: Number(categoryId),
       },
       include: {
@@ -216,6 +276,10 @@ export const createProduct = async (req: Request, res: Response) => {
       product: formatProduct(product),
     });
   } catch (error) {
+    if (imageUrl) {
+      await deleteUploadedProductImage(imageUrl);
+    }
+
     console.error("Error creating product:", error);
     res.status(500).json({
       message: "Failed to create product",
@@ -224,6 +288,8 @@ export const createProduct = async (req: Request, res: Response) => {
 };
 
 export const updateProduct = async (req: Request, res: Response) => {
+  let newImageUrl: string | undefined;
+
   try {
     const id = Number(req.params.id);
 
@@ -234,8 +300,20 @@ export const updateProduct = async (req: Request, res: Response) => {
     }
 
     const { name, price, description, categoryId } = req.body;
+    let cropSettings: ReturnType<typeof readImageCropSettings>;
+
+    try {
+      cropSettings = readImageCropSettings(req.body);
+    } catch (error) {
+      return res.status(400).json({
+        message:
+          error instanceof Error ? error.message : "Crop settings are invalid",
+      });
+    }
 
     const file = req.file;
+    const normalizedName =
+      name !== undefined && typeof name === "string" ? name.trim() : undefined;
 
     const existingProduct = await prisma.product.findUnique({
       where: { id },
@@ -244,6 +322,12 @@ export const updateProduct = async (req: Request, res: Response) => {
     if (!existingProduct) {
       return res.status(404).json({
         message: "Product not found",
+      });
+    }
+
+    if (name !== undefined && !normalizedName) {
+      return res.status(400).json({
+        message: "name cannot be empty",
       });
     }
 
@@ -277,18 +361,38 @@ export const updateProduct = async (req: Request, res: Response) => {
       }
     }
 
+    if (file) {
+      try {
+        newImageUrl = await saveUploadedProductImage(file);
+      } catch (error) {
+        return res.status(400).json({
+          message:
+            error instanceof Error ? error.message : "Uploaded image is invalid.",
+        });
+      }
+    }
+
     const updatedProduct = await prisma.product.update({
       where: { id },
       data: {
-        ...(name !== undefined && { name: String(name).trim() }),
+        ...(normalizedName !== undefined && { name: normalizedName }),
         ...(price !== undefined && {
           price: new Prisma.Decimal(String(price)),
         }),
         ...(description !== undefined && {
           description: description ? String(description).trim() : null,
         }),
-        ...(file && {
-          imageUrl: `/uploads/${file.filename}`,
+        ...(newImageUrl && {
+          imageUrl: newImageUrl,
+        }),
+        ...(cropSettings.imageCropX !== undefined && {
+          imageCropX: cropSettings.imageCropX,
+        }),
+        ...(cropSettings.imageCropY !== undefined && {
+          imageCropY: cropSettings.imageCropY,
+        }),
+        ...(cropSettings.imageZoom !== undefined && {
+          imageZoom: cropSettings.imageZoom,
         }),
         ...(categoryId !== undefined && {
           categoryId: Number(categoryId),
@@ -299,11 +403,19 @@ export const updateProduct = async (req: Request, res: Response) => {
       },
     });
 
+    if (newImageUrl) {
+      await deleteUploadedProductImage(existingProduct.imageUrl);
+    }
+
     res.status(200).json({
       message: "Product updated successfully",
       product: formatProduct(updatedProduct),
     });
   } catch (error) {
+    if (newImageUrl) {
+      await deleteUploadedProductImage(newImageUrl);
+    }
+
     console.error("Error updating product:", error);
     res.status(500).json({
       message: "Failed to update product",
@@ -331,9 +443,25 @@ export const deleteProduct = async (req: Request, res: Response) => {
       });
     }
 
-    await prisma.product.delete({
-      where: { id },
-    });
+    try {
+      await prisma.product.delete({
+        where: { id },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2003"
+      ) {
+        return res.status(409).json({
+          message:
+            "Cannot delete product because it is used by existing orders. Edit it or keep it for order history.",
+        });
+      }
+
+      throw error;
+    }
+
+    await deleteUploadedProductImage(existingProduct.imageUrl);
 
     res.status(200).json({
       message: "Product deleted successfully",

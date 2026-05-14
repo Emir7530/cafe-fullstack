@@ -6,7 +6,7 @@ import {
   type FormEvent,
 } from "react";
 import Cropper from "react-easy-crop";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import {
   getMenuProducts,
   getMenuCategories,
@@ -437,7 +437,7 @@ function MenuPage() {
             <h2>Add Menu Category</h2>
 
             <button type="button" onClick={closeCategoryForm}>
-              ×
+              X
             </button>
           </div>
 
@@ -465,7 +465,7 @@ function MenuPage() {
             <h2>Manage Categories</h2>
 
             <button type="button" onClick={() => setShowManageCategories(false)}>
-              ×
+              X
             </button>
           </div>
 
@@ -496,7 +496,7 @@ function MenuPage() {
             <h2>{editingProduct ? "Edit Menu Item" : "Add Menu Item"}</h2>
 
             <button type="button" onClick={closeProductForm}>
-              ×
+              X
             </button>
           </div>
 

@@ -1,4 +1,4 @@
-import { API_URL } from "./config";
+import { apiRequest } from "./client";
 
 export type Category = {
   id: number;
@@ -12,6 +12,9 @@ export type MenuProduct = {
   price: string | number;
   description?: string | null;
   imageUrl?: string | null;
+  imageCropX?: number | null;
+  imageCropY?: number | null;
+  imageZoom?: number | null;
   categoryId: number;
   category: Category;
 };
@@ -22,9 +25,10 @@ export type ProductFormData = {
   description: string;
   categoryId: number;
   image?: File | null;
+  imageCropX?: number;
+  imageCropY?: number;
+  imageZoom?: number;
 };
-
-const getToken = () => localStorage.getItem("token");
 
 const buildProductFormData = (data: ProductFormData) => {
   const formData = new FormData();
@@ -33,6 +37,9 @@ const buildProductFormData = (data: ProductFormData) => {
   formData.append("price", String(data.price));
   formData.append("description", data.description);
   formData.append("categoryId", String(data.categoryId));
+  formData.append("imageCropX", String(data.imageCropX ?? 0));
+  formData.append("imageCropY", String(data.imageCropY ?? 0));
+  formData.append("imageZoom", String(data.imageZoom ?? 1));
 
   if (data.image) {
     formData.append("image", data.image);
@@ -41,131 +48,64 @@ const buildProductFormData = (data: ProductFormData) => {
   return formData;
 };
 
-const parseResponse = async (response: Response) => {
-  const text = await response.text();
-
-  try {
-    return text ? JSON.parse(text) : {};
-  } catch {
-    return {};
-  }
-};
-
 export const getMenuProducts = async (): Promise<MenuProduct[]> => {
-  const response = await fetch(`${API_URL}/products?section=menu&limit=100`);
-
-  const result = await parseResponse(response);
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to fetch menu products");
-  }
+  const result = await apiRequest<{ products: MenuProduct[] }>(
+    "/products?section=menu&limit=100"
+  );
 
   return result.products || [];
 };
 
 export const getMenuCategories = async (): Promise<Category[]> => {
-  const response = await fetch(`${API_URL}/categories?section=menu`);
-
-  const result = await parseResponse(response);
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to fetch menu categories");
-  }
-
-  return result;
+  return apiRequest<Category[]>("/categories?section=menu");
 };
 
 export const createMenuCategory = async (name: string) => {
-  const response = await fetch(`${API_URL}/categories`, {
+  return apiRequest<Category>("/categories", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-    body: JSON.stringify({
+    auth: true,
+    json: {
       name,
       section: "menu",
-    }),
+    },
   });
-
-  const result = await parseResponse(response);
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to create category");
-  }
-
-  return result;
 };
 
 export const createMenuProduct = async (data: ProductFormData) => {
-  const response = await fetch(`${API_URL}/products`, {
+  return apiRequest<{ message: string; product: MenuProduct }>("/products", {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${getToken()}`,
-    },
+    auth: true,
     body: buildProductFormData(data),
   });
-
-  const result = await parseResponse(response);
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to create product");
-  }
-
-  return result;
 };
 
 export const updateMenuProduct = async (
   productId: number,
   data: ProductFormData
 ) => {
-  const response = await fetch(`${API_URL}/products/${productId}`, {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${getToken()}`,
-    },
-    body: buildProductFormData(data),
-  });
-
-  const result = await parseResponse(response);
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to update product");
-  }
-
-  return result;
+  return apiRequest<{ message: string; product: MenuProduct }>(
+    `/products/${productId}`,
+    {
+      method: "PUT",
+      auth: true,
+      body: buildProductFormData(data),
+    }
+  );
 };
 
 export const deleteMenuProduct = async (productId: number) => {
-  const response = await fetch(`${API_URL}/products/${productId}`, {
+  return apiRequest<{ message: string }>(`/products/${productId}`, {
     method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${getToken()}`,
-    },
+    auth: true,
   });
-
-  const result = await parseResponse(response);
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to delete product");
-  }
-
-  return result;
 };
 
 export const deleteMenuCategory = async (categoryId: number) => {
-  const response = await fetch(`${API_URL}/categories/${categoryId}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${getToken()}`,
-    },
-  });
-
-  const result = await parseResponse(response);
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to delete category");
-  }
-
-  return result;
+  return apiRequest<{ message: string; category: Category }>(
+    `/categories/${categoryId}`,
+    {
+      method: "DELETE",
+      auth: true,
+    }
+  );
 };

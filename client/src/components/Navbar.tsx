@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/useAuth";
+import { useCart } from "../context/useCart";
 import "./Navbar.css";
 
 function Navbar() {
@@ -15,6 +15,11 @@ function Navbar() {
     setMobileMenuOpen(false);
   };
 
+  const handleNavClick = () => {
+    closeMobileMenu();
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  };
+
   const handleLogout = () => {
     logout();
     setMobileMenuOpen(false);
@@ -23,18 +28,19 @@ function Navbar() {
 
   return (
     <header className="navbar">
-      {/* Mobile hamburger button */}
       <button
         className="mobile-menu-button"
         onClick={() => setMobileMenuOpen((prev) => !prev)}
-        aria-label="Open mobile menu"
+        aria-label={mobileMenuOpen ? "Close mobile menu" : "Open mobile menu"}
         type="button"
       >
-        {mobileMenuOpen ? "✕" : "☰"}
+        <span
+          className={`mobile-menu-icon ${mobileMenuOpen ? "open" : ""}`}
+          aria-hidden="true"
+        ></span>
       </button>
 
-      {/* Logo */}
-      <Link to="/" className="navbar-logo" onClick={closeMobileMenu}>
+      <Link to="/" className="navbar-logo" onClick={handleNavClick}>
         <div className="logo-icon">
           <span></span>
         </div>
@@ -45,20 +51,28 @@ function Navbar() {
         </div>
       </Link>
 
-      {/* Desktop links */}
       <nav className="navbar-links">
-        <Link to="/">Home</Link>
-        <Link to="/menu">Menu</Link>
-        <Link to="/shop">Shop</Link>
-        <Link to="/about" className="nav-about-link">
+        <Link to="/" onClick={handleNavClick}>
+          Home
+        </Link>
+        <Link to="/menu" onClick={handleNavClick}>
+          Menu
+        </Link>
+        <Link to="/shop" onClick={handleNavClick}>
+          Shop
+        </Link>
+        <Link to="/about" className="nav-about-link" onClick={handleNavClick}>
           About
         </Link>
-        <Link to="/location" className="nav-location-link">
+        <Link
+          to="/location"
+          className="nav-location-link"
+          onClick={handleNavClick}
+        >
           Locations
         </Link>
       </nav>
 
-      {/* Right side */}
       <div className="navbar-actions">
         {!isLoggedIn ? (
           <div className="navbar-auth-links">
@@ -87,10 +101,6 @@ function Navbar() {
 
               <Link to="/profile">Profile</Link>
 
-              {user?.role === "admin" && (
-                <Link to="/admin">Admin Dashboard</Link>
-              )}
-
               <button onClick={handleLogout} type="button">
                 Logout
               </button>
@@ -98,75 +108,72 @@ function Navbar() {
           </div>
         )}
 
-        {/* Mobile profile icon */}
         <Link
           to={isLoggedIn ? "/profile" : "/login"}
           className="mobile-profile-link"
-          onClick={closeMobileMenu}
+          onClick={handleNavClick}
           aria-label="Profile"
         >
-        <img src="/images/user.png"  className="mobile-profile-img"/>
+          <img src="/images/user.png" className="mobile-profile-img" alt="" />
         </Link>
 
         <Link
           to="/cart"
           className="cart-link"
-          onClick={closeMobileMenu}
+          onClick={handleNavClick}
           aria-label="Cart"
         >
-          <span className="cart-icon">🛒</span>
+          <img
+            src="/images/shopping-cart.png"
+            className="cart-icon"
+            alt=""
+            aria-hidden="true"
+          />
           <span className="cart-badge">{cartCount}</span>
         </Link>
       </div>
 
-      {/* Mobile dropdown menu */}
       {mobileMenuOpen && (
         <nav className="mobile-menu">
-          <Link to="/" onClick={closeMobileMenu}>
+          <Link to="/" onClick={handleNavClick}>
             Home
           </Link>
 
-          <Link to="/menu" onClick={closeMobileMenu}>
+          <Link to="/menu" onClick={handleNavClick}>
             Menu
           </Link>
 
-          <Link to="/shop" onClick={closeMobileMenu}>
+          <Link to="/shop" onClick={handleNavClick}>
             Shop
           </Link>
 
-          <Link to="/about" onClick={closeMobileMenu}>
+          <Link to="/about" onClick={handleNavClick}>
             About
           </Link>
 
-          <Link to="/location" onClick={closeMobileMenu}>
+          <Link to="/location" onClick={handleNavClick}>
             Locations
           </Link>
 
           {isLoggedIn && user?.role === "customer" && (
-            <Link to="/my-orders" onClick={closeMobileMenu}>
+            <Link to="/my-orders" onClick={handleNavClick}>
               My Orders
             </Link>
           )}
 
           {isLoggedIn && user?.role === "admin" && (
-            <>
-              <Link to="/admin/orders" onClick={closeMobileMenu}>
-                Admin Orders
-              </Link>
-
-              <Link to="/admin" onClick={closeMobileMenu}>
-                Admin Dashboard
-              </Link>
-            </>
+            <Link to="/admin/orders" onClick={handleNavClick}>
+              Admin Orders
+            </Link>
           )}
 
           {!isLoggedIn ? (
             <>
-              <Link to="/login" onClick={closeMobileMenu}>
+              <Link to="/login" onClick={handleNavClick}>
                 Login
               </Link>
 
-              <Link to="/register" onClick={closeMobileMenu}>
+              <Link to="/register" onClick={handleNavClick}>
                 Register
               </Link>
             </>
