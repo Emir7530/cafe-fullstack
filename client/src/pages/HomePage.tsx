@@ -19,6 +19,16 @@ function Home() {
   const [itemsError, setItemsError] = useState("");
 
   useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setCurrentImage((prev) =>
+        prev === heroImages.length - 1 ? 0 : prev + 1
+      );
+    }, 1500);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
     const loadFeaturedItems = async () => {
       try {
         setIsLoadingItems(true);

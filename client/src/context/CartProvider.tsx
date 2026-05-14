@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useAuth } from "./useAuth";
 import { CartContext, type CartItem } from "./cartContext";
 
 const readStoredCart = (): CartItem[] => {
@@ -34,9 +35,11 @@ const readStoredCart = (): CartItem[] => {
 };
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  const { isLoggedIn } = useAuth();
   const [cartItems, setCartItems] = useState<CartItem[]>(() =>
     readStoredCart()
   );
+  const wasLoggedInRef = useRef(isLoggedIn);
 
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cartItems));
@@ -104,6 +107,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const clearCart = useCallback(() => {
     setCartItems([]);
   }, []);
+
+  useEffect(() => {
+    if (wasLoggedInRef.current && !isLoggedIn) {
+      clearCart();
+    }
+
+    wasLoggedInRef.current = isLoggedIn;
+  }, [clearCart, isLoggedIn]);
 
   const value = useMemo(() => {
     const cartCount = cartItems.reduce(
